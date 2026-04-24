@@ -1,62 +1,31 @@
 import streamlit as st
-# import google.generativeai as genai # Ricordati di configurare la API Key dopo
+import google.generativeai as genai
 from streamlit_js_eval import get_geolocation
 
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
-# CSS Iniettato: Pulsanti grandi, rossi e arrotondati per dita pigre
-st.markdown(
-    """
+st.markdown("""
     <style>
-    .stButton > button {
-        width: 100 percento; 
-        height: 60px;
-        border-radius: 20px;
-        background-color: #FF4B4B;
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-        border: none;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    }
-    .stButton > button:hover {
-        background-color: #ff3333;
-        color: white;
-    }
+    .stButton>button { width: 100%; border-radius: 10px; background-color: #007bff; color: white; }
+    .reportview-container { background: #f0f2f6; }
     </style>
-    """, 
-    unsafe_allow_html=True
-)
+    """, unsafe_allow_html=True)
 
-# --- LOGICA GEOGRAFICA E MORFOLOGICA ---
-def get_urban_context(lat, lon, stanchezza):
+# --- FUNZIONE LOGICA MORFOLOGICA ---
+def get_urban_context(lat, lon):
     """
-    Calcola il raggio d'azione basandosi sulla pigrizia dell'utente
-    e sulla morfologia del territorio.
+    Simulazione di analisi densità. 
+    In una versione avanzata potresti usare reverse_geocoding per sapere il nome della città.
+    Per ora passiamo il concetto di 'Elasticità' al prompt.
     """
-    raggio_base = 800 # Metri
-    
-    # Vincolo Stanchezza: se siete distrutti, non camminate.
-    if stanchezza maggiore_di 7:
-        raggio_base = 500
-        messaggio_bot = "Siete praticamente dei vegetali. Vi suggerisco roba nel raggio di 500 metri."
-    else:
-        # Applichiamo il bonus del 20 percento per i borghi o città meno dense
-        raggio_base = raggio_base * 1.2
-        messaggio_bot = "Visto che non siete ancora al collasso, cercherò un po' più lontano."
+    # Esempio: se non siamo a Roma/Milano, aumentiamo il raggio del 20-30%
+    # Qui il bot chiederà a Gemini di valutare la città dalle coordinate.
+    return {
+        "morfologia_nota": "Valuta se la città è collinare (es. Siena) o densa (es. Roma).",
+        "moltiplicatore": 1.2 # Il famoso +20% di base per città non metropolitane
+    }
 
-    return raggio_base, messaggio_bot
-
-# --- INTERFACCIA UTENTE ---
-st.title("📍 Decision Bot GPS")
-st.subheader("Per coppie che non sanno decidere (e che mi stanno già annoiando)")
-
-stanchezza_livello = st.slider("Quanto siete stanchi? (da 1 a 10)", 1, 10, 5)
-
-if st.button("Trova un posto (se proprio devi)"):
-    # Qui chiameremo la geolocalizzazione
-    st.write("Sto cercando... spero ne valga la pena.")
 # --- RECUPERO GPS ---
 st.sidebar.subheader("📍 Posizione")
 modo_posizione = st.sidebar.radio("Scegli come localizzarvi:", ["GPS Live", "Inserimento Manuale"])
@@ -165,4 +134,3 @@ if submit:
                 
         except Exception as e:
             st.error(f"Errore: {e}")
-
