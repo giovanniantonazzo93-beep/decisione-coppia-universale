@@ -2,6 +2,9 @@ import streamlit as st
 import google.generativeai as genai
 from streamlit_js_eval import get_geolocation
 
+# --- RECUPERO CHIAVE SEGRETA ---
+api_key = st.secrets["GEMINI_KEY"]
+
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
