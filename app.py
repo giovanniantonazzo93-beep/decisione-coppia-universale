@@ -67,6 +67,18 @@ if st.button("Genera Proposte per la Coppia ✨", use_container_width=True):
                 model="gemini-1.5-flash",
                 contents=prompt
             )
+            if response.text:
             st.markdown(response.text)
-    except Exception as e:
-        st.error(f"Errore durante la generazione: {e}")
+        else:
+            st.warning("L'IA non ha restituito testo. Verifica i permessi della tua API Key.")
+except Exception as e:
+    # Se fallisce ancora, proviamo il nome alternativo che a volte risolve il 404
+    try:
+        response = client.models.generate_content(
+            model="gemini-1.5-flash-latest", 
+            contents=prompt
+        )
+        st.markdown(response.text)
+    except Exception as e2:
+        st.error(f"Errore persistente: {e2}")
+        st.info("Nota: Se vedi ancora 404, vai su Google AI Studio e verifica di aver accettato i nuovi Termini di Servizio per il modello Flash.")
