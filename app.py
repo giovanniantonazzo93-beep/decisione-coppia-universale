@@ -2,67 +2,71 @@ import streamlit as st
 import google.generativeai as genai
 import os
 
-# Configurazione API - Inserisci la tua chiave nei Secret di Streamlit o in un file .env
-# genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-
+# Configurazione Pagina
 st.set_page_config(page_title="Decision Bot Universale", layout="centered")
+st.title("🤖 Decision Bot Universale per Coppie")
 
-def get_decision(city, time_of_day, weather, lui_data, lei_data):
-    # Forziamo l'endpoint v1 direttamente nelle opzioni del client
-    from google.api_core import client_options
-    opts = client_options.ClientOptions(api_endpoint="generativelanguage.googleapis.com/v1")
-    
-    genai.configure(api_key=api_key, client_options=opts)
-    
-    # Specifichiamo il modello 1.5 Flash
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
-    prompt = f"Esperto locale {city}. Meteo {weather}, {time_of_day}. Proponi 3 posti reali (Lui, Lei, Compromesso) per una coppia con budget {lui_data['budget']}. Sii rapido."
-    
-    try:
-        # Chiamata diretta
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"Errore: {str(e)}"
-
-# --- INTERFACCIA UI ---
-st.title("🤖 Decision Bot Universale")
-st.subheader("Basta indecisioni, decide l'IA.")
-
+# Sidebar per API Key
 with st.sidebar:
-    st.header("📍 Contesto")
-    citta = st.text_input("Città", "Pesaro")
-    orario = st.selectbox("Orario", ["Mattina", "Pomeriggio", "Sera", "Notte"])
-    meteo = st.selectbox("Meteo", ["Sole", "Pioggia", "Freddo/Vento"])
-    api_key = st.text_input("Google API Key", type="password")
+    api_key = st.text_input("Inserisci Google API Key", type="password")
+    if api_key:
+        genai.configure(api_key=api_key)
 
+# INPUT GENERALI
 col1, col2 = st.columns(2)
-
 with col1:
-    st.header("♂️ Lui")
-    fatigue_lui = st.slider("Stanchezza Lui", 1, 10, 5)
-    budget_lui = st.select_slider("Budget Lui", options=["€", "€€", "€€€"])
-    mezzo_lui = st.selectbox("Mezzo Lui", ["Piedi", "Mezzi", "Auto"])
-
+    citta = st.text_input("Città", value="Pesaro")
+    meteo = st.selectbox("Meteo", ["Sole", "Pioggia", "Freddo", "Nuvole"])
 with col2:
-    st.header("♀️ Lei")
-    fatigue_lei = st.slider("Stanchezza Lei", 1, 10, 5)
-    budget_lei = st.select_slider("Budget Lei", options=["€", "€€", "€€€"])
-    mezzo_lei = st.selectbox("Mezzo Lei", ["Piedi", "Mezzi", "Auto"])
+    orario = st.time_input("Orario attuale")
+    budget = st.select_slider("Budget", options=["€", "€€", "€€€"])
 
-if st.button("Genera Soluzioni ✨"):
+st.divider()
+
+# DATI LUI & LEI
+c_lui, c_lei = st.columns(2)
+with c_lui:
+    st.subheader("Lui 👤")
+    stanchezza_lui = st.slider("Stanchezza (Lui)", 1, 10, 5, key="s_lui")
+    mezzo_lui = st.selectbox("Mezzo preferito (Lui)", ["Piedi", "Mezzi", "Auto"], key="m_lui")
+
+with c_lei:
+    st.subheader("Lei 👤")
+    stanchezza_lei = st.slider("Stanchezza (Lei)", 1, 10, 5, key="s_lei")
+    mezzo_lei = st.selectbox("Mezzo preferito (Lei)", ["Piedi", "Mezzi", "Auto"], key="m_lei")
+
+# LOGICA GENERATIVA
+if st.button("Genera Proposte ✨"):
     if not api_key:
-        st.error("Inserisci la tua API Key per continuare.")
+        st.error("Per favore, inserisci l'API Key nella sidebar.")
     else:
         try:
-            genai.configure(api_key=api_key)
-            with st.spinner("Consultando le stelle (e le mappe)..."):
-                lui = {"fatigue": fatigue_lui, "budget": budget_lui, "transport": mezzo_lui}
-                lei = {"fatigue": fatigue_lei, "budget": budget_lei, "transport": mezzo_lei}
+            # Selezione del modello corretto (versione stabile)
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            prompt = f"""
+            Agisci come un esperto local concierge a {citta}. 
+            Pianifica 3 attività reali per una coppia considerando questi dati:
+            - Meteo: {meteo}
+            - Orario: {orario}
+            - Budget massimo: {budget}
+            
+            Profilo Lui: Stanchezza {stanchezza_lui}/10, preferisce spostarsi con {mezzo_lui}.
+            Profilo Lei: Stanchezza {stanchezza_lei}/10, preferisce spostarsi con {mezzo_lei}.
+            
+            REGOLE:
+            1. Proposta LUI: Basata sui suoi interessi e basso sforzo fisico se stanco.
+            2. Proposta LEI: Basata sui suoi interessi e preferenze di movimento.
+            3. Proposta COMPROMESSO: Una via di mezzo perfetta che minimizza lo stress di entrambi.
+            
+            Per ogni proposta indica: Nome del posto reale a {citta}, motivo della scelta, orario consigliato e costo stimato.
+            Rispondi in Italiano con un tono amichevole e sintetico.
+            """
+            
+            with st.spinner('Interrogando Gemini...'):
+                response = model.generate_content(prompt)
+                st.markdown(response.text)
                 
-                risultato = get_decision(citta, orario, meteo, lui, lei)
-                st.markdown("---")
-                st.markdown(risultato)
         except Exception as e:
-            st.error(f"Errore: {e}")
+            st.error(f"Errore durante la generazione: {e}")
+            st.info("Suggerimento: Verifica che il modello 'gemini-1.5-flash' sia disponibile per la tua regione o controlla la versione v1beta nell'URL dell'API.")
