@@ -26,36 +26,24 @@ def get_urban_context(lat, lon):
         "moltiplicatore": 1.2 # Il famoso +20% di base per città non metropolitane
     }
 
-# --- SIDEBAR & API ---
-st.sidebar.header("Impostazioni")
-api_key = st.sidebar.text_input("Inserisci la tua Google API Key", type="password")
-
 # --- RECUPERO GPS ---
 st.sidebar.subheader("📍 Posizione")
-modo_posizione = st.sidebar.radio("📍 Come troviamo la posizione?", ["GPS Live", "Inserimento Manuale"])
+modo_posizione = st.sidebar.radio("Scegli come localizzarvi:", ["GPS Live", "Inserimento Manuale"])
 
 if modo_posizione == "GPS Live":
     loc = get_geolocation()
     if loc:
-        lat, lon = loc['coords']['latitude'], loc['coords']['longitude']
-        pos_context = f"Coordinate GPS: {lat}, {lon}."
-        st.sidebar.success(f"Posizione acquisita: {lat:.4f}")
+        lat = loc['coords']['latitude']
+        lon = loc['coords']['longitude']
+        st.sidebar.success(f"Coordinate acquisite: {lat:.4f}, {lon:.4f}")
+        pos_context = f"Mi trovo esattamente a queste coordinate GPS: {lat}, {lon}."
     else:
-        pos_context = "Roma, Pigneto" # Fallback
+        st.sidebar.info("In attesa del GPS... Assicurati di aver dato i permessi al browser.")
+        pos_context = "Mi trovo a Roma, zona Pigneto."
 else:
     citta = st.sidebar.text_input("Città", "Siena")
     quartiere = st.sidebar.text_input("Quartiere o Punto di riferimento", "Piazza del Campo")
-    pos_context = f"Città: {citta}, Zona: {quartiere}."
-loc = get_geolocation()
-
-if loc:
-    lat = loc['coords']['latitude']
-    lon = loc['coords']['longitude']
-    st.sidebar.success(f"Coordinate acquisite: {lat:.4f}, {lon:.4f}")
-    pos_context = f"Coordinate GPS: {lat}, {lon}."
-else:
-    st.sidebar.info("In attesa del GPS... Fallback su Roma Pigneto.")
-    pos_context = "Mi trovo a Roma, zona Pigneto."
+    pos_context = f"Mi trovo a {citta}, zona {quartiere}."
 
 # --- INTERFACCIA PRINCIPALE ---
 st.title("🤖 Decision Bot GPS")
