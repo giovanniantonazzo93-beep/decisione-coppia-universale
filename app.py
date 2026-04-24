@@ -5,40 +5,61 @@ from streamlit_js_eval import get_geolocation
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
-# CSS MIRATO: Colpiamo solo il pulsante del form, non i menu di sistema
+# CSS "IMPATTO TOTALE": Ingrandisce slider, selettori e bottoni
 st.markdown("""
     <style>
-    /* Sfondo soft */
+    /* Sfondo e font */
     .stApp {
-        background-color: #f0f2f6 !important;
+        background-color: #f8f9fa !important;
     }
 
-    /* Colpiamo SPECIFICATAMENTE il pulsante del Form */
-    div.stForm submit_button > button, div.stButton > button {
-        width: 100% !important;
-        height: 75px !important;
-        border-radius: 20px !important;
+    /* TRASFORMAZIONE SLIDER: Rendiamo i pallini e le linee giganti */
+    .stSlider [data-baseweb="slider"] {
+        height: 20px !important;
+        margin-bottom: 30px !important;
+    }
+    .stSlider [role="slider"] {
+        width: 30px !important;
+        height: 30px !important;
         background-color: #FF4B4B !important;
-        color: white !important;
-        font-size: 22px !important;
-        font-weight: bold !important;
-        border: none !important;
-        box-shadow: 0px 6px 20px rgba(255, 75, 75, 0.4) !important;
-        margin-top: 20px !important;
     }
 
-    /* Effetto Hover (passaggio mouse) */
-    div.stButton > button:hover {
-        background-color: #ff3333 !important;
-        border: 2px solid white !important;
-    }
-
-    /* Rendiamo le etichette degli slider più leggibili */
-    .stSlider label, .stSelectbox label {
-        font-weight: bold !important;
-        color: #31333F !important;
+    /* SELETTORI (Selectbox e Multiselect) */
+    .stSelectbox div[data-baseweb="select"], .stMultiSelect div[data-baseweb="select"] {
+        min-height: 60px !important;
         font-size: 18px !important;
     }
+
+    /* IL BOTTONE: Ora è un vero pulsante da app */
+    div.stButton > button {
+        width: 100% !important;
+        height: 80px !important;
+        border-radius: 15px !important;
+        background-color: #FF4B4B !important;
+        color: white !important;
+        font-size: 24px !important;
+        font-weight: 800 !important;
+        border: none !important;
+        box-shadow: 0px 10px 20px rgba(255, 75, 75, 0.4) !important;
+        margin-top: 30px !important;
+        text-transform: uppercase !important;
+    }
+
+    /* TITOLI E ETICHETTE: Basta scritte piccole */
+    label p {
+        font-size: 20px !important;
+        font-weight: bold !important;
+        color: #1E1E1E !important;
+    }
+    
+    .stSubheader p {
+        font-size: 22px !important;
+        color: #FF4B4B !important;
+        font-weight: bold !important;
+    }
+
+    /* Nasconde i menu di sistema per pulizia */
+    header, footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
