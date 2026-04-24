@@ -24,8 +24,7 @@ if not api_key:
     st.stop()
 
 # Inizializzazione Client
-client = genai.Client(api_key=api_key)
-
+client = genai.Client(api_key=api_key, http_options={'api_version': 'v1'})
 # --- PROFILI ---
 col_lui, col_lei = st.columns(2)
 with col_lui:
