@@ -1,3 +1,5 @@
+import sys
+import streamlit as st
 import streamlit as st
 import google.generativeai as genai
 import os
