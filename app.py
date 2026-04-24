@@ -61,7 +61,50 @@ st.markdown("""
     /* Nasconde i menu di sistema per pulizia */
     header, footer {visibility: hidden;}
     </style>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True) 
+
+import random
+
+# --- DATABASE DI INSULTI ---
+insulti_pos = [
+    "GPS? Davvero non sapete nemmeno dove vi trovate? Imbarazzante.",
+    "Ah, cercate aiuto da un satellite perché il vostro senso dell'orientamento è nullo.",
+    "Vi ho trovati. Purtroppo non posso farvi sparire, quindi andiamo avanti.",
+    "Coordinate ricevute. Il satellite ha appena riso della vostra posizione."
+]
+
+insulti_meteo = {
+    "Sole": ["C'è il sole, ma scommetto che troverete comunque il modo di sudare e lamentarvi.", "☀️ Il sole splende su tutti, tranne che sul vostro buon umore."],
+    "Pioggia": ["Piove. Spero che i vostri capelli non siano fatti di zucchero.", "☔️ Piove. Il meteo si adegua alla vostra allegria contagiosa."],
+    "Vento/Freddo": ["Fa freddo. Copritevi, che non ho voglia di chiamare un'ambulanza.", "❄️ Vento e gelo. Ideale per gelare quel poco di cervello che vi è rimasto."]
+}
+
+insulti_budget = {
+    "€": ["Budget da fame. Spero vi piacciano i campioni omaggio.", "Siete i soliti spiantati, eh?", "A pane e acqua si risparmia un sacco, sapete?"],
+    "€€": ["La classe media colpisce ancora. Che scelta mediocre.", "Né ricchi né poveri. Solo... insipidi.", "Il giusto mezzo. Ovvero: non sapete cosa volete."],
+    "€€€": ["Oh, guardate i nuovi ricchi!", "Volete buttare soldi? Dateli a me invece di mangiarveli.", "Spero che il lusso colmi il vostro vuoto interiore."]
+}
+
+insulti_stanchezza = {
+    "riposati": ["Siete freschi come rose. Andate a correre una maratona invece di stressare me.", "Troppa energia. Mi fate venire il mal di testa."],
+    "medi": ["Siete nella terra di nessuno. Praticamente dei mobili dell'IKEA.", "Né vivi né morti. La definizione perfetta di noia."],
+    "distrutti": ["Praticamente due cadaveri. Restate a casa a fissare il soffitto, fate prima.", "Siete così stanchi che Gemini vi consiglierà un letto d'ospedale."]
+}
+
+insulti_mezzi = {
+    "A piedi": ["A piedi? Spero abbiate scarpe comode e polmoni di ricambio.", "👟 Camminare fa bene, dicono. A voi servirebbe un miracolo."],
+    "Mezzi pubblici": ["Mezzi pubblici? Preparatevi a odiare l'umanità più del solito.", "🚌 Ah, l'ebbrezza dell'autobus pieno. Buona fortuna."],
+    "Auto": ["In auto? Pigri e inquinatori. Almeno non dovrete camminare, poverini.", "🚗 Spero che passiate mezz'ora a cercare parcheggio."]
+}
+
+# --- ORA LA LOGICA DI NAVIGAZIONE ---
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'dati' not in st.session_state:
+    st.session_state.dati = {}
+
+def avanti():
+    st.session_state.step += 1
 
 # --- INIZIALIZZAZIONE ---
 if 'step' not in st.session_state:
