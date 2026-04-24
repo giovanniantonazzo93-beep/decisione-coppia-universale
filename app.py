@@ -5,21 +5,27 @@ from streamlit_js_eval import get_geolocation
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
-# Sostituisci il vecchio CSS con questo (Interfaccia Mobile Rossa)
+# CSS Corretto: Usiamo % perché questa NON è una f-string
 st.markdown("""
     <style>
-    .stApp { background-color: #f8f9fa; }
-    .stButton>button { 
-        width: 100 percento; 
-        height: 70px; 
-        border-radius: 35px; 
-        background-color: #FF4B4B; 
-        color: white; 
-        font-size: 20px; 
-        font-weight: bold; 
-        border: none;
+    .stApp { background-color: #f8f9fa !important; }
+    
+    div.stButton > button {
+        width: 100% !important; 
+        height: 70px !important;
+        border-radius: 35px !important;
+        background-color: #FF4B4B !important;
+        color: white !important;
+        font-size: 24px !important;
+        font-weight: bold !important;
+        border: none !important;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.2) !important;
     }
-    .stButton>button:hover { background-color: #ff3333; color: white; }
+    
+    .stButton > button:hover {
+        background-color: #ff3333 !important;
+        transform: scale(1.01);
+    }
     </style>
     """, unsafe_allow_html=True)
 
