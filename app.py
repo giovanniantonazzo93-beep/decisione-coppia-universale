@@ -222,7 +222,7 @@ elif st.session_state.step == 7:
     # Non serve più il controllo "if not api_key" perché la carichiamo all'avvio
     try:
         genai.configure(api_key=api_key) 
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-3-flash-preview')
         
         # Recuperiamo i dati salvati
         d = st.session_state.dati
