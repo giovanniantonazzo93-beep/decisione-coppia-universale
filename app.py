@@ -5,21 +5,17 @@ from streamlit_js_eval import get_geolocation
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
+# --- STILE ---
 st.markdown("""
 <style>
-    /* Sfondo generale e font */
     .stApp {
         background-color: #fcfcfc;
     }
-    
-    /* Titolo Rosso e Centrato */
     h1 {
         color: #FF4B4B !important;
         text-align: center !important;
         font-weight: 800;
     }
-
-    /* Il Pulsantone per Mobile */
     div.stButton > button {
         width: 100%;
         border-radius: 30px;
@@ -31,8 +27,6 @@ st.markdown("""
         border: none;
         box-shadow: 0px 4px 15px rgba(255, 75, 75, 0.2);
     }
-
-    /* Slider Rossi */
     .stSlider > div > div > div > div {
         background-color: #FF4B4B;
     }
