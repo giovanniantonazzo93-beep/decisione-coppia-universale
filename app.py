@@ -45,11 +45,20 @@ else:
     quartiere = st.sidebar.text_input("Quartiere o Punto di riferimento", "Piazza del Campo")
     pos_context = f"Mi trovo a {citta}, zona {quartiere}."
 
-# --- INTERFACCIA PRINCIPALE ---
-st.title("🤖 Decision Bot GPS")
-st.write("Risolviamo l'indecisione in base a stanchezza e morfologia urbana.")
-
 with st.form("main_form"):
+    # --- NUOVA SEZIONE ATTIVITÀ ---
+    st.subheader("🎯 Cosa vi va di fare?")
+    opzioni_attivita = ["Tutto", "Cibo (Ristoranti/Trattorie)", "Bere (Cocktail/Wine Bar)", "Cultura (Musei/Eventi)", "Relax (Parchi/Librerie)", "Shopping"]
+    
+    col_a, col_b = st.columns([2, 1])
+    with col_a:
+        categorie = st.multiselect("Selezionate una o più categorie:", options=opzioni_attivita, default=["Tutto"])
+    with col_b:
+        stupiscimi = st.toggle("🎰 Stupiscimi!")
+
+    st.divider()
+
+    # --- LOGISTICA ---
     col1, col2 = st.columns(2)
     with col1:
         orario = st.select_slider("🕒 Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"], value="Sera")
@@ -60,6 +69,7 @@ with st.form("main_form"):
 
     st.divider()
     
+    # --- STANCHEZZA ---
     c3, c4 = st.columns(2)
     with c3:
         st.markdown("**STATO LUI**")
@@ -69,7 +79,6 @@ with st.form("main_form"):
         stanc_lei = st.slider("Stanchezza Lei", 1, 10, 5, key="sk")
     
     submit = st.form_submit_button("Genera Proposte Localizzate")
-
 # --- LOGICA GENERAZIONE ---
 if submit:
     if not api_key:
