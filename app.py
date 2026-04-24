@@ -117,7 +117,7 @@ def avanti():
 
 # --- LOGICA DELLE PAGINE ---
 
-# STEP 1: POSIZIONE
+# --- STEP 1: POSIZIONE ---
 if st.session_state.step == 1:
     st.subheader("📍 Dove siete finiti?")
     modo = st.radio("Scegli come localizzarvi:", ["GPS Live", "Inserimento Manuale"])
@@ -127,89 +127,92 @@ if st.session_state.step == 1:
         if loc:
             st.session_state.dati['pos'] = f"{loc['coords']['latitude']}, {loc['coords']['longitude']}"
             st.success("Vi ho trovati. Purtroppo.")
+            st.write(f"🤖 {random.choice(insulti_pos)}")
             st.button("Avanti ➔", on_click=avanti)
         else:
-            st.info("Sto cercando il GPS... se non lo trovo è colpa del vostro telefono scadente.")
+            st.info("In attesa del GPS... muovetevi o date i permessi!")
     else:
         citta = st.text_input("Città", "Roma")
         st.session_state.dati['pos'] = citta
+        st.write(f"🤖 {random.choice(insulti_pos)}")
         st.button("Conferma Città ➔", on_click=avanti)
 
-# STEP 2: QUANDO E METEO
+# --- STEP 2: METEO ---
 elif st.session_state.step == 2:
-    st.subheader("🕒 Momento e Meteo")
+    st.subheader("🕒 Il momento del disagio")
     orario = st.select_slider("Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"])
-    meteo = st.selectbox("☁️ Com'è fuori?", ["Sole", "Pioggia", "Vento/Freddo"])
+    meteo = st.selectbox("Meteo attuale", ["Sole", "Pioggia", "Vento/Freddo"])
     
     st.session_state.dati['orario'] = orario
     st.session_state.dati['meteo'] = meteo
     
-    if meteo == "Pioggia":
-        st.warning("Piove? Che peccato, vi bagnerete i capelli costosi.")
-    
-    st.button("Prossimo passo ➔", on_click=avanti)
+    st.divider()
+    st.write(f"🤖 {random.choice(insulti_meteo[meteo])}")
+    st.button("Vediamo il resto ➔", on_click=avanti)
 
-# STEP 3: BUDGET
+# --- STEP 3: BUDGET ---
 elif st.session_state.step == 3:
-    st.subheader("💰 Il portafoglio")
+    st.subheader("💰 Quanti soldi volete sprecare?")
     budget = st.select_slider("Budget", options=["€", "€€", "€€€"])
     st.session_state.dati['budget'] = budget
     
-    if budget == "€":
-        st.error("Budget minimo? Siete i soliti spiantati.")
-    elif budget == "€€€":
-        st.info("Oh, abbiamo dei ricchi qui. Vediamo di non sprecarli tutti in una volta.")
-        
+    st.divider()
+    st.info(f"🤖 {random.choice(insulti_budget[budget])}")
     st.button("Continua l'agonia ➔", on_click=avanti)
 
-# STEP 4: STANCHEZZA (ENTRAMBI)
+# --- STEP 4: STANCHEZZA ---
 elif st.session_state.step == 4:
-    st.subheader("😫 Livello di sopportazione")
-    stanc_lui = st.slider("Stanchezza Lui", 1, 10, 5)
-    stanc_lei = st.slider("Stanchezza Lei", 1, 10, 5)
+    st.subheader("😫 Livello di agonia")
+    l = st.slider("Stanchezza Lui", 1, 10, 5)
+    s = st.slider("Stanchezza Lei", 1, 10, 5)
+    st.session_state.dati.update({'lui': l, 'lei': s})
     
-    st.session_state.dati['lui'] = stanc_lui
-    st.session_state.dati['lei'] = stanc_lei
+    media = (l + s) / 2
+    if media <= 4: cat = "riposati"
+    elif media <= 7: cat = "medi"
+    else: cat = "distrutti"
     
-    if stanc_lui > 8 or stanc_lei > 8:
-        st.warning("Siete quasi morti. Forse dovreste restare sul divano, ma io vi farò uscire comunque.")
-        
-    st.button("Quasi finita ➔", on_click=avanti)
+    st.divider()
+    st.write(f"🤖 {random.choice(insulti_stanchezza[cat])}")
+    st.button("Quasi finito ➔", on_click=avanti)
 
-# STEP 5: MEZZO
+# --- STEP 5: MEZZI ---
 elif st.session_state.step == 5:
-    st.subheader("🚗 Trasporto")
-    mezzo = st.selectbox("Come vi muovete?", ["A piedi", "Mezzi pubblici", "Auto"])
+    st.subheader("🚗 Come volete trascinarvi?")
+    mezzo = st.selectbox("Spostamento", ["A piedi", "Mezzi pubblici", "Auto"])
     st.session_state.dati['mezzo'] = mezzo
     
-    if mezzo == "A piedi":
-        st.write("A piedi? Spero abbiate scarpe comode e polmoni nuovi.")
-        
-    st.button("Ultimo sforzo ➔", on_click=avanti)
+    st.divider()
+    st.write(f"🤖 {random.choice(insulti_mezzi[mezzo])}")
+    st.button("Ultima scelta ➔", on_click=avanti)
 
-# STEP 6: CATEGORIE O STUPISCIMI
+# --- STEP 6: CATEGORIE E GENERAZIONE ---
 elif st.session_state.step == 6:
-    st.subheader("🎯 Cosa volete?")
-    opzioni = ["Tutto", "Cibo", "Bere", "Cultura", "Relax"]
-    categorie = st.multiselect("Categorie:", options=opzioni, default=["Tutto"])
+    st.subheader("🎯 Cosa cercate?")
+    categorie = st.multiselect("Seleziona:", ["Cibo", "Bere", "Cultura", "Relax"], default=["Cibo"])
     
-    if st.button("🎰 STUPISCIMI!"):
-        st.session_state.dati['stupiscimi'] = True
-        st.session_state.dati['cat'] = "Qualcosa di assurdo"
-        avanti()
-        st.rerun()
-        
-    if st.button("GENERA OPZIONI"):
-        st.session_state.dati['stupiscimi'] = False
-        st.session_state.dati['cat'] = categorie
-        avanti()
-        st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🎰 STUPISCIMI!"):
+            st.session_state.dati['stupiscimi'] = True
+            st.session_state.dati['cat'] = "Qualcosa di bizzarro"
+            st.session_state.step = 7
+            st.rerun()
+    with col2:
+        if st.button("GENERA OPZIONI"):
+            st.session_state.dati['stupiscimi'] = False
+            st.session_state.dati['cat'] = categorie
+            st.session_state.step = 7
+            st.rerun()
 
-# STEP 7: RISULTATO FINALE
+# --- STEP 7: IL VERDETTO ---
 elif st.session_state.step == 7:
-    # Qui richiamiamo Gemini (come nel codice precedente)
-    # Alla fine mettiamo un tasto per ricominciare
-    if st.button("Ricomincia il calvario"):
+    st.subheader("🔮 Il Verdetto del Bot")
+    st.write("Sto elaborando la vostra rovina...")
+    # Qui poi metteremo la chiamata a Gemini
+    st.write(st.session_state.dati) 
+    
+    if st.button("Ricomincia da capo"):
         st.session_state.step = 1
         st.rerun()
 
