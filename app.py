@@ -32,6 +32,20 @@ api_key = st.sidebar.text_input("Inserisci la tua Google API Key", type="passwor
 
 # --- RECUPERO GPS ---
 st.sidebar.subheader("📍 Posizione")
+modo_posizione = st.sidebar.radio("📍 Come troviamo la posizione?", ["GPS Live", "Inserimento Manuale"])
+
+if modo_posizione == "GPS Live":
+    loc = get_geolocation()
+    if loc:
+        lat, lon = loc['coords']['latitude'], loc['coords']['longitude']
+        pos_context = f"Coordinate GPS: {lat}, {lon}."
+        st.sidebar.success(f"Posizione acquisita: {lat:.4f}")
+    else:
+        pos_context = "Roma, Pigneto" # Fallback
+else:
+    citta = st.sidebar.text_input("Città", "Siena")
+    quartiere = st.sidebar.text_input("Quartiere o Punto di riferimento", "Piazza del Campo")
+    pos_context = f"Città: {citta}, Zona: {quartiere}."
 loc = get_geolocation()
 
 if loc:
