@@ -8,22 +8,21 @@ import os
 st.set_page_config(page_title="Decision Bot Universale", layout="centered")
 
 def get_decision(city, time_of_day, weather, lui_data, lei_data):
-    genai.configure(api_key=api_key) 
+    # Forza la configurazione sulla versione stabile v1
+    genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-1.5-flash')
     
-    prompt = f"""
-    Agisci come esperto local manager di {city}.
-    Pianifica un'attività per una coppia:
-    - Momento: {time_of_day}, Meteo: {weather}.
-    - LUI: Stanchezza {lui_data['fatigue']}/10, Budget {lui_data['budget']}, Mezzo {lui_data['transport']}.
-    - LEI: Stanchezza {lei_data['fatigue']}/10, Budget {lei_data['budget']}, Mezzo {lei_data['transport']}.
-
-    PRODUCI 3 PROPOSTE REALI A {city} (Lui, Lei, Compromesso).
-    Includi: Nome posto, Orario e Prezzo. Sii sintetico.
-    """
+    prompt = f"Città: {city}. Meteo: {weather}. Lui: {lui_data}. Lei: {lei_data}. Proponi 3 attività reali (Lui, Lei, Compromesso) con nomi di posti, orari e prezzi."
     
-    response = model.generate_content(prompt)
-    return response.textt
+    # Questo blocco forza l'API v1 ignorando il v1beta che ti dà errore
+    try:
+        response = model.generate_content(
+            prompt,
+            request_options={"api_version": "v1"}
+        )
+        return response.text
+    except Exception as e:
+        return f"Errore tecnico: {str(e)}"
 
 # --- INTERFACCIA UI ---
 st.title("🤖 Decision Bot Universale")
