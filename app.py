@@ -219,10 +219,46 @@ elif st.session_state.step == 6:
 elif st.session_state.step == 7:
     st.subheader("🔮 Il Verdetto del Bot")
     
-    if not api_key:
-        st.error("Inserisci la API Key nella barra laterale, o non muoverò un dito!")
-        if st.button("Torna indietro"):
-            st.session_state.step = 6
-            st.rerun()
+    # Non serve più il controllo "if not api_key" perché la carichiamo all'avvio
+    try:
+        genai.configure(api_key=api_key) 
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Recuperiamo i dati salvati
+        d = st.session_state.dati
+        
+        # Calcolo raggio basato sulla stanchezza
+        stanchezza_max = max(d.get('lui', 5), d.get('lei', 5))
+        raggio = 500 if stanchezza_max > 7 else 800
+
+        prompt = f"""
+        Agisci come il 'Decision Bot Cinico'. Sei sarcastico e arrogante.
+        POSIZIONE: {d.get('pos')}
+        DATI COPPIA: Stanchezza Lui {d.get('lui')}, Lei {d.get('lei')}. 
+        Budget: {d.get('budget')}. Meteo: {d.get('meteo')}. Mezzo: {d.get('mezzo')}.
+        ATTIVITÀ RICHIESTE: {d.get('cat')}
+        
+        LOGICA GEOGRAFICA:
+        1. Il raggio massimo è di {raggio} metri.
+        2. Se siamo in un borgo o città collinare, aumenta il raggio del 20 percento ma insultali per la pendenza.
+        
+        FORMATO OUTPUT:
+        - Esordio acido sulla loro condizione misera.
+        - 3 opzioni REALI (Nome, Distanza, Il Verdetto cattivo).
+        - Link Google Maps per ognuna.
+        """
+
+        with st.spinner("Sto decidendo il vostro destino... spero sia tragico."):
+            response = model.generate_content(prompt)
+            st.markdown(response.text)
+            
+    except Exception as e:
+        st.error(f"Errore: Assicurati di aver messo la chiave nei Secrets di Streamlit! Dettaglio: {e}")
+
+    st.divider()
+    if st.button("Ricomincia il calvario"):
+        st.session_state.step = 1
+        st.session_state.dati = {}
+        st.rerun()
     
 
