@@ -90,7 +90,15 @@ if submit:
             
             stanchezza_max = max(stanc_lui, stanc_lei)
             
-            # PROMPT AGGIORNATO CON LOGICA DI ELASTICITÀ
+            # --- AGGIUNTA LOGICA ATTIVITÀ ---
+            if stupiscimi:
+                istr_att = "MODALITÀ STUPISCIMI: Ignora la noia. Proponi qualcosa di bizzarro, insolito o segreto."
+            elif "Tutto" in categorie or not categorie:
+                istr_att = "Cerca tra qualsiasi attività (cibo, cultura, relax, shopping)."
+            else:
+                istr_att = f"Concentrati esclusivamente su queste categorie: {', '.join(categorie)}."
+            
+            # IL TUO PROMPT CON LE AGGIUNTE
             prompt = f"""
             Agisci come il Decision Bot Universale per coppie. 
             POSIZIONE: {pos_context}
@@ -98,13 +106,14 @@ if submit:
             DATI COPPIA:
             - Stanchezza Lui: {stanc_lui}/10, Stanchezza Lei: {stanc_lei}/10
             - Budget: {budget} | Meteo: {meteo} | Mezzo: {mezzo}
+            - ATTIVITÀ RICHIESTA: {istr_att}
             
             ISTRUZIONI GEOGRAFICHE (Morfologia Urbana):
             1. Identifica la città dalle coordinate o dal contesto.
             2. Applica il 'Coefficiente di Elasticità Urbana': 
                - In città iper-dense (Roma, Milano), raggio massimo 500-800m se stanchezza > 7.
-               - In città con morfologia complessa o bassa densità (es. Siena, borghi, periferie), aumenta il raggio di spostamento del 20-30% rispetto allo standard, perché i punti di interesse sono più radi.
-            3. Se la stanchezza di uno dei due è > 8, privilegia posti con pochissimo dislivello o raggiungibili senza sforzo.
+               - In città con morfologia complessa o bassa densità (es. Siena, borghi, periferie), aumenta il raggio di spostamento del 20-30% rispetto allo standard.
+            3. Se la stanchezza di uno dei due è > 8, privilegia posti con pochissimo dislivello.
 
             REGOLE DI OUTPUT:
             - Fornisci 3 opzioni REALI: [LUI], [LEI] e [IL COMPROMESSO].
@@ -113,8 +122,9 @@ if submit:
             
             FORMATO:
             - **Nome del Posto** (Indirizzo)
-            - **Distanza e Pendenza**: Indica i metri e se c'è molta salita (importante per città come Siena).
-            - **Link**: [Google Maps](https://www.google.com/maps/search/?api=1&query={{nome_posto_indirizzo}})
+            - **Distanza e Pendenza**: Indica i metri e se c'è molta salita.
+            - **Il Verdetto**: Perché andarci (motivazione basata su stanchezza e attività).
+            - **Link**: [Google Maps](https://www.google.com/maps/search/{{nome_posto_indirizzo}})
             """
 
             with st.spinner("Analizzando la morfologia della zona..."):
