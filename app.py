@@ -8,27 +8,22 @@ import os
 st.set_page_config(page_title="Decision Bot Universale", layout="centered")
 
 def get_decision(city, time_of_day, weather, lui_data, lei_data):
-    # Selezione del modello stabile
+    genai.configure(api_key=api_key) 
     model = genai.GenerativeModel('gemini-1.5-flash')
     
     prompt = f"""
-    Agisci come un esperto local manager di {city}. 
-    Pianifica un'attività per una coppia considerando:
-    - Momento: {time_of_day} con meteo {weather}.
+    Agisci come esperto local manager di {city}.
+    Pianifica un'attività per una coppia:
+    - Momento: {time_of_day}, Meteo: {weather}.
     - LUI: Stanchezza {lui_data['fatigue']}/10, Budget {lui_data['budget']}, Mezzo {lui_data['transport']}.
     - LEI: Stanchezza {lei_data['fatigue']}/10, Budget {lei_data['budget']}, Mezzo {lei_data['transport']}.
 
-    PRODUCI 3 PROPOSTE REALI A {city}:
-    1. Proposta LUI: Favorisce le sue preferenze/stato.
-    2. Proposta LEI: Favorisce le sue preferenze/stato.
-    3. COMPROMESSO: La soluzione perfetta per entrambi.
-
-    Per ogni proposta indica: Nome posto reale, Orario consigliato, Costo stimato e perché è adatta.
-    Sii sintetico ma convincente.
+    PRODUCI 3 PROPOSTE REALI A {city} (Lui, Lei, Compromesso).
+    Includi: Nome posto, Orario e Prezzo. Sii sintetico.
     """
     
     response = model.generate_content(prompt)
-    return response.text
+    return response.textt
 
 # --- INTERFACCIA UI ---
 st.title("🤖 Decision Bot Universale")
