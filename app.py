@@ -5,7 +5,6 @@ from streamlit_js_eval import get_geolocation
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
-# CSS per rendere l'interfaccia più pulita
 st.markdown("""
     <style>
     .stButton>button { width: 100%; border-radius: 10px; background-color: #007bff; color: white; }
@@ -13,28 +12,40 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# --- FUNZIONE LOGICA MORFOLOGICA ---
+def get_urban_context(lat, lon):
+    """
+    Simulazione di analisi densità. 
+    In una versione avanzata potresti usare reverse_geocoding per sapere il nome della città.
+    Per ora passiamo il concetto di 'Elasticità' al prompt.
+    """
+    # Esempio: se non siamo a Roma/Milano, aumentiamo il raggio del 20-30%
+    # Qui il bot chiederà a Gemini di valutare la città dalle coordinate.
+    return {
+        "morfologia_nota": "Valuta se la città è collinare (es. Siena) o densa (es. Roma).",
+        "moltiplicatore": 1.2 # Il famoso +20% di base per città non metropolitane
+    }
+
 # --- SIDEBAR & API ---
 st.sidebar.header("Impostazioni")
 api_key = st.sidebar.text_input("Inserisci la tua Google API Key", type="password")
 
 # --- RECUPERO GPS ---
 st.sidebar.subheader("📍 Posizione")
-# Questa funzione attiva la richiesta di permessi nel browser
 loc = get_geolocation()
 
 if loc:
     lat = loc['coords']['latitude']
     lon = loc['coords']['longitude']
     st.sidebar.success(f"Coordinate acquisite: {lat:.4f}, {lon:.4f}")
-    pos_context = f"Mi trovo esattamente a queste coordinate GPS: {lat}, {lon}."
+    pos_context = f"Coordinate GPS: {lat}, {lon}."
 else:
-    st.sidebar.info("In attesa del GPS... Assicurati di aver dato il permesso al browser.")
-    # Fallback se il GPS fallisce (es. utente nega il permesso)
+    st.sidebar.info("In attesa del GPS... Fallback su Roma Pigneto.")
     pos_context = "Mi trovo a Roma, zona Pigneto."
 
 # --- INTERFACCIA PRINCIPALE ---
 st.title("🤖 Decision Bot GPS")
-st.write("Risolviamo l'indecisione senza farvi fare chilometri inutili.")
+st.write("Risolviamo l'indecisione in base a stanchezza e morfologia urbana.")
 
 with st.form("main_form"):
     col1, col2 = st.columns(2)
@@ -64,39 +75,41 @@ if submit:
     else:
         try:
             genai.configure(api_key=api_key)
-            # Utilizziamo l'alias 'latest' per essere sempre aggiornati
-            model = genai.GenerativeModel('gemini-flash-latest')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            # Prompt super-dettagliato per evitare Trastevere se sei al Pigneto
+            stanchezza_max = max(stanc_lui, stanc_lei)
+            
+            # PROMPT AGGIORNATO CON LOGICA DI ELASTICITÀ
             prompt = f"""
-            Agisci come un esperto local di Roma. 
-            POSIZIONE ATTUALE: {pos_context}
+            Agisci come il Decision Bot Universale per coppie. 
+            POSIZIONE: {pos_context}
             
-            DATI:
-            - Orario: {orario}
-            - Meteo: {meteo}
-            - Budget: {budget}
-            - Mezzo di trasporto: {mezzo}
-            - Stanchezza media: {(stanc_lui + stanc_lei)/2}/10.
+            DATI COPPIA:
+            - Stanchezza Lui: {stanc_lui}/10, Stanchezza Lei: {stanc_lei}/10
+            - Budget: {budget} | Meteo: {meteo} | Mezzo: {mezzo}
             
-            REGOLE RIGIDE:
-            1. Trova posti REALI e APERTI nel raggio di massimo 1-2 km dalla posizione indicata. 
-            2. Se la stanchezza è alta (>7), proponi solo posti a meno di 10 minuti a piedi.
-            3. Evita i soliti posti turistici (niente Centro/Trastevere se sono al Pigneto).
-            4. Le 3 proposte (Lui, Lei, Compromesso) devono essere diverse tra loro (es: un bar, un locale con musica, un bistrot).
+            ISTRUZIONI GEOGRAFICHE (Morfologia Urbana):
+            1. Identifica la città dalle coordinate o dal contesto.
+            2. Applica il 'Coefficiente di Elasticità Urbana': 
+               - In città iper-dense (Roma, Milano), raggio massimo 500-800m se stanchezza > 7.
+               - In città con morfologia complessa o bassa densità (es. Siena, borghi, periferie), aumenta il raggio di spostamento del 20-30% rispetto allo standard, perché i punti di interesse sono più radi.
+            3. Se la stanchezza di uno dei due è > 8, privilegia posti con pochissimo dislivello o raggiungibili senza sforzo.
+
+            REGOLE DI OUTPUT:
+            - Fornisci 3 opzioni REALI: [LUI], [LEI] e [IL COMPROMESSO].
+            - Usa un tono ironico e intelligente.
+            - Niente cliché turistici.
             
-            FORMATO OUTPUT:
-            Per ogni proposta scrivi:
-            - **Nome del Posto** (con indirizzo)
-            - **Perché andarci** (in relazione alla stanchezza e meteo)
-            - **Distanza stimata**
-            - **Link Google Maps** (genera un link del tipo https://www.google.com/maps/search/?api=1&query=Nome+Posto+Roma)
+            FORMATO:
+            - **Nome del Posto** (Indirizzo)
+            - **Distanza e Pendenza**: Indica i metri e se c'è molta salita (importante per città come Siena).
+            - **Link**: [Google Maps](https://www.google.com/maps/search/?api=1&query={{nome_posto_indirizzo}})
             """
 
-            with st.spinner("Cercando i posti migliori vicino a te..."):
+            with st.spinner("Analizzando la morfologia della zona..."):
                 response = model.generate_content(prompt)
                 st.markdown("---")
                 st.markdown(response.text)
                 
         except Exception as e:
-            st.error(f"Si è verificato un errore: {e}")
+            st.error(f"Errore: {e}")
