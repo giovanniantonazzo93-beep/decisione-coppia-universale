@@ -35,7 +35,7 @@ if st.button("🚀 TROVA COSA FARE"):
             api_key_pulita = chiave_input.strip()
             genai.configure(api_key=api_key_pulita)
             
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
             
             # Prompt super dettagliato con i budget
             prompt = f"""
