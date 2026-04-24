@@ -205,133 +205,14 @@ elif st.session_state.step == 6:
             st.session_state.step = 7
             st.rerun()
 
-# --- STEP 7: IL VERDETTO ---
+# --- STEP 7: IL VERDETTO (Gemini entra in azione) ---
 elif st.session_state.step == 7:
     st.subheader("🔮 Il Verdetto del Bot")
-    st.write("Sto elaborando la vostra rovina...")
-    # Qui poi metteremo la chiamata a Gemini
-    st.write(st.session_state.dati) 
     
-    if st.button("Ricomincia da capo"):
-        st.session_state.step = 1
-        st.rerun()
-
-# Mantieni la tua API KEY nella barra laterale
-api_key = st.sidebar.text_input("Inserisci Gemini API Key", type="password")
-# --- FUNZIONE LOGICA MORFOLOGICA ---
-def get_urban_context(lat, lon):
-    """
-    Simulazione di analisi densità. 
-    In una versione avanzata potresti usare reverse_geocoding per sapere il nome della città.
-    Per ora passiamo il concetto di 'Elasticità' al prompt.
-    """
-    # Esempio: se non siamo a Roma/Milano, aumentiamo il raggio del 20-30%
-    # Qui il bot chiederà a Gemini di valutare la città dalle coordinate.
-    return {
-        "morfologia_nota": "Valuta se la città è collinare (es. Siena) o densa (es. Roma).",
-        "moltiplicatore": 1.2 # Il famoso +20% di base per città non metropolitane
-    }
-
-# --- RECUPERO GPS ---
-st.sidebar.subheader("📍 Posizione")
-modo_posizione = st.sidebar.radio("Scegli come localizzarvi:", ["GPS Live", "Inserimento Manuale"])
-
-if modo_posizione == "GPS Live":
-    loc = get_geolocation()
-    if loc:
-        lat = loc['coords']['latitude']
-        lon = loc['coords']['longitude']
-        st.sidebar.success(f"Coordinate acquisite: {lat:.4f}, {lon:.4f}")
-        pos_context = f"Mi trovo esattamente a queste coordinate GPS: {lat}, {lon}."
-    else:
-        st.sidebar.info("In attesa del GPS... Assicurati di aver dato i permessi al browser.")
-        pos_context = "Mi trovo a Roma, zona Pigneto."
-else:
-    citta = st.sidebar.text_input("Città", "Siena")
-    quartiere = st.sidebar.text_input("Quartiere o Punto di riferimento", "Piazza del Campo")
-    pos_context = f"Mi trovo a {citta}, zona {quartiere}."
-
-with st.form("main_form"):
-    # --- NUOVA SEZIONE ATTIVITÀ ---
-    st.subheader("🎯 Cosa vi va di fare?")
-    opzioni_attivita = ["Tutto", "Cibo (Ristoranti/Trattorie)", "Bere (Cocktail/Wine Bar)", "Cultura (Musei/Eventi)", "Relax (Parchi/Librerie)", "Shopping"]
-    
-    col_a, col_b = st.columns([2, 1])
-    with col_a:
-        categorie = st.multiselect("Selezionate una o più categorie:", options=opzioni_attivita, default=["Tutto"])
-    with col_b:
-        stupiscimi = st.toggle("🎰 Stupiscimi!")
-
-    st.divider()
-
-    # --- LOGISTICA ---
-    col1, col2 = st.columns(2)
-    with col1:
-        orario = st.select_slider("🕒 Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"], value="Sera")
-        meteo = st.selectbox("☁️ Meteo attuale", ["Sole", "Pioggia", "Vento/Freddo"])
-    with col2:
-        budget = st.select_slider("💰 Budget", options=["€", "€€", "€€€"], value="€€")
-        mezzo = st.selectbox("🚗 Come vi spostate?", ["A piedi", "Mezzi pubblici", "Auto"])
-
-    st.divider()
-    
-    # --- STANCHEZZA ---
-    c3, c4 = st.columns(2)
-    with c3:
-        st.markdown("**STATO LUI**")
-        stanc_lui = st.slider("Stanchezza Lui", 1, 10, 5, key="sl")
-    with c4:
-        st.markdown("**STATO LEI**")
-        stanc_lei = st.slider("Stanchezza Lei", 1, 10, 5, key="sk")
-    
-    submit = st.form_submit_button("Genera Proposte Localizzate")
-# --- LOGICA GENERAZIONE ---
-if submit:
     if not api_key:
-        st.error("Inserisci la API Key nella barra laterale, pigro!")
-    else:
-        try:
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
-            # Calcolo stanchezza massima per decidere il raggio
-            stanchezza_max = max(stanc_lui, stanc_lei)
-            
-            # Regola raggio Python 3.14 (simboli ok nel codice, parole nelle stringhe)
-            raggio_calcolato = 800
-            if stanchezza_max > 7:
-                raggio_calcolato = 500
-
-            # Logica Attività
-            if stupiscimi:
-                istr_att = "MODALITÀ STUPISCIMI: Proponi qualcosa di bizzarro o insolito."
-            elif "Tutto" in categorie or not categorie:
-                istr_att = "Qualsiasi attività (cibo, cultura, relax)."
-            else:
-                istr_att = f"Solo queste categorie: {', '.join(categorie)}."
-            
-            # Il Prompt Cinico definitivo
-            prompt = f"""
-            Agisci come il 'Decision Bot Cinico'. Sei sarcastico e arrogante.
-            POSIZIONE: {pos_context}
-            DATI COPPIA: Stanchezza Lui {stanc_lui}, Lei {stanc_lei}. Budget {budget}. Meteo {meteo}.
-            ATTIVITÀ: {istr_att}
-            
-            LOGICA GEOGRAFICA:
-            1. Il raggio massimo è di {raggio_calcolato} metri.
-            2. Se siamo in un borgo o città collinare, aumenta il raggio del 20 percento ma insultali per la pendenza.
-            
-            FORMATO OUTPUT:
-            - Esordio acido sulla loro condizione.
-            - 3 opzioni REALI (Nome, Distanza, Il Verdetto cattivo).
-            - Link Google Maps.
-            """
-
-            with st.spinner("Sto cercando... spero ne valga la pena."):
-                response = model.generate_content(prompt)
-                st.divider()
-                st.markdown(response.text)
-                
-        except Exception as e:
-            st.error(f"Errore critico: {e}")
+        st.error("Inserisci la API Key nella barra laterale, o non muoverò un dito!")
+        if st.button("Torna indietro"):
+            st.session_state.step = 6
+            st.rerun()
+    
 
