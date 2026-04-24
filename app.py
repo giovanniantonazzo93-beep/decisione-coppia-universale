@@ -1,61 +1,65 @@
 import streamlit as st
-from google import genai
-import sys
+import google.generativeai as genai
+import os
 
-# Configurazione iniziale
-st.set_page_config(page_title="Decision Bot Universale", layout="wide")
+# Configurazione Pagina
+st.set_page_config(page_title="Decision Bot Universale", layout="centered")
+st.title("🤖 Decision Bot Universale per Coppie")
 
-# --- INTERFACCIA ---
-st.title("🤖 Decision Bot Universale")
-st.caption(f"Engine: Python {sys.version.split()[0]}")
+# Sidebar per API Key
+api_key = st.sidebar.text_input("Inserisci Google API Key", type="password")
 
-with st.sidebar:
-    st.header("1. Configurazione")
-    api_key = st.text_input("Inserisci Google API Key", type="password")
-    st.divider()
-    st.header("2. Dettagli")
-    citta = st.text_input("Città", value="Pesaro")
-    meteo = st.selectbox("Meteo", ["Sole", "Pioggia", "Freddo", "Nuvole"])
-    orario = st.time_input("Orario previsto")
-    budget = st.select_slider("Budget di coppia", options=["€", "€€", "€€€"])
+if api_key:
+    genai.configure(api_key=api_key)
+    # Utilizzo del modello stabile per evitare errori 404
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
-if not api_key:
-    st.warning("Inserisci l'API Key nella sidebar.")
-    st.stop()
+    # Sezione Input
+    with st.form("input_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            citta = st.text_input("Città", value="Pesaro")
+            orario = st.selectbox("Momento della giornata", ["Mattina", "Pomeriggio", "Sera", "Notte"])
+            meteo = st.selectbox("Meteo", ["Sole", "Pioggia", "Freddo/Nuvole"])
+        
+        with col2:
+            budget = st.select_slider("Budget", options=["€", "€€", "€€€"])
+            mezzo = st.selectbox("Mezzo di trasporto", ["A piedi", "Mezzi pubblici", "Auto"])
 
-# Inizializzazione Client
-client = genai.Client(api_key=api_key, http_options={'api_version': 'v1'})
-# --- PROFILI ---
-col_lui, col_lei = st.columns(2)
-with col_lui:
-    st.subheader("Lui 👤")
-    stanchezza_lui = st.slider("Stanchezza (Lui)", 1, 10, 5, key="s_lui")
-    mezzo_lui = st.selectbox("Mezzo (Lui)", ["Piedi", "Mezzi", "Auto"], key="m_lui")
+        st.divider()
+        c3, c4 = st.columns(2)
+        with c3:
+            stanchezza_lui = st.slider("Stanchezza Lui (1=Attivo, 10=Distrutto)", 1, 10, 5)
+        with c4:
+            stanchezza_lei = st.slider("Stanchezza Lei (1=Attivo, 10=Distrutto)", 1, 10, 5)
+        
+        submit = st.form_submit_button("Genera Proposte")
 
-with col_lei:
-    st.subheader("Lei 👤")
-    stanchezza_lei = st.slider("Stanchezza (Lei)", 1, 10, 5, key="s_lei")
-    mezzo_lei = st.selectbox("Mezzo (Lei)", ["Piedi", "Mezzi", "Auto"], key="m_lei")
+    if submit:
+        # Costruzione del Prompt
+        prompt = f"""
+        Agisci come un esperto local di {citta}.
+        Dati attuali: Orario {orario}, Meteo {meteo}, Mezzo: {mezzo}, Budget: {budget}.
+        
+        Profilo Lui: Stanchezza {stanchezza_lui}/10.
+        Profilo Lei: Stanchezza {stanchezza_lei}/10.
+        
+        Fornisci 3 proposte reali basate su luoghi esistenti a {citta}:
+        1. Proposta LUI: Favorisce i suoi interessi e livello di stanchezza.
+        2. Proposta LEI: Favorisce i suoi interessi e livello di stanchezza.
+        3. COMPROMESSO: Una via di mezzo perfetta per entrambi.
+        
+        Per ogni proposta indica: Nome del posto, Orario consigliato e Prezzo stimato.
+        Sii conciso e simpatico.
+        """
 
-# --- GENERAZIONE ---
-if st.button("Genera Proposte ✨", use_container_width=True):
-    prompt = f"""
-    Agisci come un esperto local concierge a {citta}. 
-    Pianifica 3 attività reali (Lui, Lei, Compromesso) considerando:
-    Meteo: {meteo}, Orario: {orario}, Budget: {budget}.
-    Lui: Stanchezza {stanchezza_lui}/10, Mezzo {mezzo_lui}.
-    Lei: Stanchezza {stanchezza_lei}/10, Mezzo {mezzo_lei}.
-    Includi nomi di posti reali a {citta}, orari e prezzi. Rispondi in Italiano.
-    """
-    
-    try:
-        with st.spinner('Consulto le stelle (e Gemini)...'):
-            response = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=prompt
-            )
-            if response.text:
-                st.success("Trovato!")
+        try:
+            with st.spinner("Consultando le stelle (e l'IA)..."):
+                response = model.generate_content(prompt)
+                st.markdown("---")
                 st.markdown(response.text)
-    except Exception as e:
-        st.error(f"Errore: {e}")
+        except Exception as e:
+            st.error(f"Errore nella chiamata API: {e}")
+            st.info("Verifica che il modello 'gemini-1.5-flash' sia abilitato per la tua regione e chiave API.")
+else:
+    st.warning("Per favore, inserisci la tua API Key nella sidebar per iniziare.")
