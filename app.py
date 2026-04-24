@@ -5,40 +5,39 @@ from streamlit_js_eval import get_geolocation
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
-# CSS Aggressivo: Questo DEVE funzionare. 
-# Ho aggiunto selettori che colpiscono ogni possibile ID del bottone.
+# CSS MIRATO: Colpiamo solo il pulsante del form, non i menu di sistema
 st.markdown("""
     <style>
-    /* Sfondo globale */
+    /* Sfondo soft */
     .stApp {
-        background-color: #f8f9fa !important;
+        background-color: #f0f2f6 !important;
     }
 
-    /* Colpiamo tutti i bottoni del sito */
-    button, .stButton>button {
+    /* Colpiamo SPECIFICATAMENTE il pulsante del Form */
+    div.stForm submit_button > button, div.stButton > button {
         width: 100% !important;
-        height: 80px !important;
-        border-radius: 40px !important;
+        height: 75px !important;
+        border-radius: 20px !important;
         background-color: #FF4B4B !important;
         color: white !important;
-        font-size: 25px !important;
-        font-weight: 800 !important;
-        text-transform: uppercase !important;
-        border: 3px solid white !important;
-        box-shadow: 0px 8px 15px rgba(0,0,0,0.3) !important;
-        display: block !important;
-        margin: 0 auto !important;
+        font-size: 22px !important;
+        font-weight: bold !important;
+        border: none !important;
+        box-shadow: 0px 6px 20px rgba(255, 75, 75, 0.4) !important;
+        margin-top: 20px !important;
     }
 
-    /* Effetto pressione per dare feedback su mobile */
-    button:active {
-        background-color: #cc0000 !important;
-        transform: translateY(4px) !important;
+    /* Effetto Hover (passaggio mouse) */
+    div.stButton > button:hover {
+        background-color: #ff3333 !important;
+        border: 2px solid white !important;
     }
 
-    /* Rimuoviamo i margini inutili che stringono il bottone */
-    .element-container, .stMarkdown {
-        width: 100% !important;
+    /* Rendiamo le etichette degli slider più leggibili */
+    .stSlider label, .stSelectbox label {
+        font-weight: bold !important;
+        color: #31333F !important;
+        font-size: 18px !important;
     }
     </style>
     """, unsafe_allow_html=True)
