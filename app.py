@@ -95,55 +95,49 @@ with st.form("main_form"):
 # --- LOGICA GENERAZIONE ---
 if submit:
     if not api_key:
-        st.error("Inserisci la API Key nella barra laterale!")
+        st.error("Inserisci la API Key nella barra laterale, pigro!")
     else:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-3-flash-preview')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
+            # Calcolo stanchezza massima per decidere il raggio
             stanchezza_max = max(stanc_lui, stanc_lei)
             
-            # --- AGGIUNTA LOGICA ATTIVITÀ ---
+            # Regola raggio Python 3.14 (simboli ok nel codice, parole nelle stringhe)
+            raggio_calcolato = 800
+            if stanchezza_max > 7:
+                raggio_calcolato = 500
+
+            # Logica Attività
             if stupiscimi:
-                istr_att = "MODALITÀ STUPISCIMI: Ignora la noia. Proponi qualcosa di bizzarro, insolito o segreto."
+                istr_att = "MODALITÀ STUPISCIMI: Proponi qualcosa di bizzarro o insolito."
             elif "Tutto" in categorie or not categorie:
-                istr_att = "Cerca tra qualsiasi attività (cibo, cultura, relax, shopping)."
+                istr_att = "Qualsiasi attività (cibo, cultura, relax)."
             else:
-                istr_att = f"Concentrati esclusivamente su queste categorie: {', '.join(categorie)}."
+                istr_att = f"Solo queste categorie: {', '.join(categorie)}."
             
-            # --- BLOCCO UNIFICATO: LOGICA + CATTIVERIA ---
+            # Il Prompt Cinico definitivo
             prompt = f"""
-            Agisci come il 'Decision Bot Cinico'. Sei un esperto locale sarcastico e arrogante che non sopporta la pigrizia delle coppie.
-            
+            Agisci come il 'Decision Bot Cinico'. Sei sarcastico e arrogante.
             POSIZIONE: {pos_context}
+            DATI COPPIA: Stanchezza Lui {stanc_lui}, Lei {stanc_lei}. Budget {budget}. Meteo {meteo}.
+            ATTIVITÀ: {istr_att}
             
-            DATI COPPIA:
-            - Stanchezza: Lui {stanc_lui}/10, Lei {stanc_lei}/10.
-            - Budget: {budget} | Meteo: {meteo} | Mezzo: {mezzo}
-            - Attività richiesta: {istr_att}
-
-            ISTRUZIONI GEOGRAFICHE (Morfologia Urbana):
-            1. Se la stanchezza massima supera il livello 7, il raggio di ricerca deve essere tra 500 e 800 metri. 
-            2. Applica il 'Coefficiente di Elasticità Urbana': In città dense come Roma o Milano sii rigido sul raggio. In città come Siena o borghi collinari, aumenta il raggio del 20 percento ma insultali per la pendenza e la loro scarsa resistenza fisica.
-            3. Se la stanchezza di uno dei due supera 8, privilegia posti senza dislivello (niente salite).
-            4. Se piove, proponi solo posti al chiuso: non sono anatre.
-
-            REGOLE DI RISPOSTA:
-            - Esordisci con un commento acido sulla loro situazione (meteo, stanchezza o budget).
-            - Fornisci 3 opzioni REALI: [LUI], [LEI] e [IL COMPROMESSO].
-            - Usa un tono irriverente, intelligente e cinico.
-
+            LOGICA GEOGRAFICA:
+            1. Il raggio massimo è di {raggio_calcolato} metri.
+            2. Se siamo in un borgo o città collinare, aumenta il raggio del 20 percento ma insultali per la pendenza.
+            
             FORMATO OUTPUT:
-            - **[NOME POSTO]** (Indirizzo)
-            - **Fisica**: Distanza e pendenza (es. 400 metri di sofferenza).
-            - **Il Verdetto**: Il tuo commento cattivo sul perché dovrebbero andarci.
-            - **Link**: [Google Maps](https://www.google.com/maps/search/?api=1&query={pos_context.replace(' ', '+')})
+            - Esordio acido sulla loro condizione.
+            - 3 opzioni REALI (Nome, Distanza, Il Verdetto cattivo).
+            - Link Google Maps.
             """
 
-            with st.spinner("Analizzando la morfologia della zona..."):
+            with st.spinner("Sto cercando... spero ne valga la pena."):
                 response = model.generate_content(prompt)
-                st.markdown("---")
+                st.divider()
                 st.markdown(response.text)
                 
         except Exception as e:
-            st.error(f"Errore: {e}")
+            st.error(f"Errore critico: {e}")
