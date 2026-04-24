@@ -51,7 +51,7 @@ if st.button("🚀 TROVA COSA FARE"):
     else:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
             # IL PROMPT INTELLIGENTE CHE ANALIZZA LA CITTÀ
             prompt = f"""
