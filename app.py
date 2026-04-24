@@ -6,11 +6,15 @@ from streamlit_js_eval import get_geolocation
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
 st.markdown("""
-    <style>
-    .stButton>button { width: 100%; border-radius: 10px; background-color: #007bff; color: white; }
-    .reportview-container { background: #f0f2f6; }
-    </style>
-    """, unsafe_allow_html=True)
+   # --- INTERFACCIA MOBILE FRIENDLY PULITA ---
+st.title("📍 Decision Bot GPS")
+st.write("L'assistente cinico per coppie indecise.")
+
+# Stile compatto: pulsante azzurro grande e angoli tondi
+st.markdown("<style>div.stButton > button {width: 100%; border-radius: 20px; height: 3.5em; background-color: #007bff; color: white; font-weight: bold; border: none;}</style>", unsafe_allow_html=True)
+
+# Stile per gli slider (colore azzurro coerente)
+st.markdown("<style>.stSlider > div > div > div > div { background-color: #007bff; }</style>", unsafe_allow_html=True)
 
 # --- FUNZIONE LOGICA MORFOLOGICA ---
 def get_urban_context(lat, lon):
