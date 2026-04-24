@@ -5,33 +5,12 @@ from streamlit_js_eval import get_geolocation
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
-# --- STILE ---
 st.markdown("""
-<style>
-    .stApp {
-        background-color: #fcfcfc;
-    }
-    h1 {
-        color: #FF4B4B !important;
-        text-align: center !important;
-        font-weight: 800;
-    }
-    div.stButton > button {
-        width: 100%;
-        border-radius: 30px;
-        height: 4em;
-        background-color: #FF4B4B;
-        color: white !important;
-        font-weight: bold;
-        font-size: 20px;
-        border: none;
-        box-shadow: 0px 4px 15px rgba(255, 75, 75, 0.2);
-    }
-    .stSlider > div > div > div > div {
-        background-color: #FF4B4B;
-    }
-</style>
-""", unsafe_allow_value=True)
+    <style>
+    .stButton>button { width: 100%; border-radius: 10px; background-color: #007bff; color: white; }
+    .reportview-container { background: #f0f2f6; }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- FUNZIONE LOGICA MORFOLOGICA ---
 def get_urban_context(lat, lon):
