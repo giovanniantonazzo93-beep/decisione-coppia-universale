@@ -63,6 +63,113 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# --- INIZIALIZZAZIONE (Mettilo subito dopo il CSS) ---
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'dati' not in st.session_state:
+    st.session_state.dati = {}
+
+def avanti():
+    st.session_state.step += 1
+
+# --- LOGICA DELLE PAGINE ---
+
+# STEP 1: POSIZIONE
+if st.session_state.step == 1:
+    st.subheader("📍 Dove siete finiti?")
+    modo = st.radio("Scegli come localizzarvi:", ["GPS Live", "Inserimento Manuale"])
+    
+    if modo == "GPS Live":
+        loc = get_geolocation()
+        if loc:
+            st.session_state.dati['pos'] = f"{loc['coords']['latitude']}, {loc['coords']['longitude']}"
+            st.success("Vi ho trovati. Purtroppo.")
+            st.button("Avanti ➔", on_click=avanti)
+        else:
+            st.info("Sto cercando il GPS... se non lo trovo è colpa del vostro telefono scadente.")
+    else:
+        citta = st.text_input("Città", "Roma")
+        st.session_state.dati['pos'] = citta
+        st.button("Conferma Città ➔", on_click=avanti)
+
+# STEP 2: QUANDO E METEO
+elif st.session_state.step == 2:
+    st.subheader("🕒 Momento e Meteo")
+    orario = st.select_slider("Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"])
+    meteo = st.selectbox("☁️ Com'è fuori?", ["Sole", "Pioggia", "Vento/Freddo"])
+    
+    st.session_state.dati['orario'] = orario
+    st.session_state.dati['meteo'] = meteo
+    
+    if meteo == "Pioggia":
+        st.warning("Piove? Che peccato, vi bagnerete i capelli costosi.")
+    
+    st.button("Prossimo passo ➔", on_click=avanti)
+
+# STEP 3: BUDGET
+elif st.session_state.step == 3:
+    st.subheader("💰 Il portafoglio")
+    budget = st.select_slider("Budget", options=["€", "€€", "€€€"])
+    st.session_state.dati['budget'] = budget
+    
+    if budget == "€":
+        st.error("Budget minimo? Siete i soliti spiantati.")
+    elif budget == "€€€":
+        st.info("Oh, abbiamo dei ricchi qui. Vediamo di non sprecarli tutti in una volta.")
+        
+    st.button("Continua l'agonia ➔", on_click=avanti)
+
+# STEP 4: STANCHEZZA (ENTRAMBI)
+elif st.session_state.step == 4:
+    st.subheader("😫 Livello di sopportazione")
+    stanc_lui = st.slider("Stanchezza Lui", 1, 10, 5)
+    stanc_lei = st.slider("Stanchezza Lei", 1, 10, 5)
+    
+    st.session_state.dati['lui'] = stanc_lui
+    st.session_state.dati['lei'] = stanc_lei
+    
+    if stanc_lui > 8 or stanc_lei > 8:
+        st.warning("Siete quasi morti. Forse dovreste restare sul divano, ma io vi farò uscire comunque.")
+        
+    st.button("Quasi finita ➔", on_click=avanti)
+
+# STEP 5: MEZZO
+elif st.session_state.step == 5:
+    st.subheader("🚗 Trasporto")
+    mezzo = st.selectbox("Come vi muovete?", ["A piedi", "Mezzi pubblici", "Auto"])
+    st.session_state.dati['mezzo'] = mezzo
+    
+    if mezzo == "A piedi":
+        st.write("A piedi? Spero abbiate scarpe comode e polmoni nuovi.")
+        
+    st.button("Ultimo sforzo ➔", on_click=avanti)
+
+# STEP 6: CATEGORIE O STUPISCIMI
+elif st.session_state.step == 6:
+    st.subheader("🎯 Cosa volete?")
+    opzioni = ["Tutto", "Cibo", "Bere", "Cultura", "Relax"]
+    categorie = st.multiselect("Categorie:", options=opzioni, default=["Tutto"])
+    
+    if st.button("🎰 STUPISCIMI!"):
+        st.session_state.dati['stupiscimi'] = True
+        st.session_state.dati['cat'] = "Qualcosa di assurdo"
+        avanti()
+        st.rerun()
+        
+    if st.button("GENERA OPZIONI"):
+        st.session_state.dati['stupiscimi'] = False
+        st.session_state.dati['cat'] = categorie
+        avanti()
+        st.rerun()
+
+# STEP 7: RISULTATO FINALE
+elif st.session_state.step == 7:
+    # Qui richiamiamo Gemini (come nel codice precedente)
+    # Alla fine mettiamo un tasto per ricominciare
+    if st.button("Ricomincia il calvario"):
+        st.session_state.step = 1
+        st.rerun()
+
 # Mantieni la tua API KEY nella barra laterale
 api_key = st.sidebar.text_input("Inserisci Gemini API Key", type="password")
 # --- FUNZIONE LOGICA MORFOLOGICA ---
