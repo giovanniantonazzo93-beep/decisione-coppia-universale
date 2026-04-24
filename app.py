@@ -8,23 +8,23 @@ import os
 st.set_page_config(page_title="Decision Bot Universale", layout="centered")
 
 def get_decision(city, time_of_day, weather, lui_data, lei_data):
-    # Con la chiave di AI Studio, questa configurazione standard basta e avanza
-    genai.configure(api_key=api_key)
+    # Forziamo l'endpoint v1 direttamente nelle opzioni del client
+    from google.api_core import client_options
+    opts = client_options.ClientOptions(api_endpoint="generativelanguage.googleapis.com/v1")
+    
+    genai.configure(api_key=api_key, client_options=opts)
+    
+    # Specifichiamo il modello 1.5 Flash
     model = genai.GenerativeModel('gemini-1.5-flash')
     
-    prompt = f"""
-    Agisci come esperto local manager di {city}.
-    Pianifica un'attività per una coppia:
-    - Momento: {time_of_day}, Meteo: {weather}.
-    - LUI: Stanchezza {lui_data['fatigue']}/10, Budget {lui_data['budget']}, Mezzo {lui_data['transport']}.
-    - LEI: Stanchezza {lei_data['fatigue']}/10, Budget {lei_data['budget']}, Mezzo {lei_data['transport']}.
-
-    PRODUCI 3 PROPOSTE REALI A {city} (Lui, Lei, Compromesso).
-    Includi: Nome posto reale, Orario e Prezzo. Sii sintetico.
-    """
+    prompt = f"Esperto locale {city}. Meteo {weather}, {time_of_day}. Proponi 3 posti reali (Lui, Lei, Compromesso) per una coppia con budget {lui_data['budget']}. Sii rapido."
     
-    response = model.generate_content(prompt)
-    return response.text
+    try:
+        # Chiamata diretta
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Errore: {str(e)}"
 
 # --- INTERFACCIA UI ---
 st.title("🤖 Decision Bot Universale")
