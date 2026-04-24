@@ -1,65 +1,102 @@
 import streamlit as st
 import google.generativeai as genai
-import os
+from streamlit_js_eval import get_geolocation
 
-# Configurazione Pagina
-st.set_page_config(page_title="Decision Bot Universale", layout="centered")
-st.title("🤖 Decision Bot Universale per Coppie")
+# --- CONFIGURAZIONE ---
+st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
-# Sidebar per API Key
-api_key = st.sidebar.text_input("Inserisci Google API Key", type="password")
+# CSS per rendere l'interfaccia più pulita
+st.markdown("""
+    <style>
+    .stButton>button { width: 100%; border-radius: 10px; background-color: #007bff; color: white; }
+    .reportview-container { background: #f0f2f6; }
+    </style>
+    """, unsafe_allow_html=True)
 
-if api_key:
-    genai.configure(api_key=api_key)
-    # Utilizzo del modello stabile per evitare errori 404
-    model = genai.GenerativeModel('gemini-3-flash-preview')
+# --- SIDEBAR & API ---
+st.sidebar.header("Impostazioni")
+api_key = st.sidebar.text_input("Inserisci la tua Google API Key", type="password")
 
-    # Sezione Input
-    with st.form("input_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            citta = st.text_input("Città", value="Pesaro")
-            orario = st.selectbox("Momento della giornata", ["Mattina", "Pomeriggio", "Sera", "Notte"])
-            meteo = st.selectbox("Meteo", ["Sole", "Pioggia", "Freddo/Nuvole"])
-        
-        with col2:
-            budget = st.select_slider("Budget", options=["€", "€€", "€€€"])
-            mezzo = st.selectbox("Mezzo di trasporto", ["A piedi", "Mezzi pubblici", "Auto"])
+# --- RECUPERO GPS ---
+st.sidebar.subheader("📍 Posizione")
+# Questa funzione attiva la richiesta di permessi nel browser
+loc = get_geolocation()
 
-        st.divider()
-        c3, c4 = st.columns(2)
-        with c3:
-            stanchezza_lui = st.slider("Stanchezza Lui (1=Attivo, 10=Distrutto)", 1, 10, 5)
-        with c4:
-            stanchezza_lei = st.slider("Stanchezza Lei (1=Attivo, 10=Distrutto)", 1, 10, 5)
-        
-        submit = st.form_submit_button("Genera Proposte")
+if loc:
+    lat = loc['coords']['latitude']
+    lon = loc['coords']['longitude']
+    st.sidebar.success(f"Coordinate acquisite: {lat:.4f}, {lon:.4f}")
+    pos_context = f"Mi trovo esattamente a queste coordinate GPS: {lat}, {lon}."
+else:
+    st.sidebar.info("In attesa del GPS... Assicurati di aver dato il permesso al browser.")
+    # Fallback se il GPS fallisce (es. utente nega il permesso)
+    pos_context = "Mi trovo a Roma, zona Pigneto."
 
-    if submit:
-        # Costruzione del Prompt
-        prompt = f"""
-        Agisci come un esperto local di {citta}.
-        Dati attuali: Orario {orario}, Meteo {meteo}, Mezzo: {mezzo}, Budget: {budget}.
-        
-        Profilo Lui: Stanchezza {stanchezza_lui}/10.
-        Profilo Lei: Stanchezza {stanchezza_lei}/10.
-        
-        Fornisci 3 proposte reali basate su luoghi esistenti a {citta}:
-        1. Proposta LUI: Favorisce i suoi interessi e livello di stanchezza.
-        2. Proposta LEI: Favorisce i suoi interessi e livello di stanchezza.
-        3. COMPROMESSO: Una via di mezzo perfetta per entrambi.
-        
-        Per ogni proposta indica: Nome del posto, Orario consigliato e Prezzo stimato.
-        Sii conciso e simpatico.
-        """
+# --- INTERFACCIA PRINCIPALE ---
+st.title("🤖 Decision Bot GPS")
+st.write("Risolviamo l'indecisione senza farvi fare chilometri inutili.")
 
+with st.form("main_form"):
+    col1, col2 = st.columns(2)
+    with col1:
+        orario = st.select_slider("🕒 Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"], value="Sera")
+        meteo = st.selectbox("☁️ Meteo attuale", ["Sole", "Pioggia", "Vento/Freddo"])
+    with col2:
+        budget = st.select_slider("💰 Budget", options=["€", "€€", "€€€"], value="€€")
+        mezzo = st.selectbox("🚗 Come vi spostate?", ["A piedi", "Mezzi pubblici", "Auto"])
+
+    st.divider()
+    
+    c3, c4 = st.columns(2)
+    with c3:
+        st.markdown("**STATO LUI**")
+        stanc_lui = st.slider("Stanchezza Lui", 1, 10, 5, key="sl")
+    with c4:
+        st.markdown("**STATO LEI**")
+        stanc_lei = st.slider("Stanchezza Lei", 1, 10, 5, key="sk")
+    
+    submit = st.form_submit_button("Genera Proposte Localizzate")
+
+# --- LOGICA GENERAZIONE ---
+if submit:
+    if not api_key:
+        st.error("Inserisci la API Key nella barra laterale!")
+    else:
         try:
-            with st.spinner("Consultando le stelle (e l'IA)..."):
+            genai.configure(api_key=api_key)
+            # Utilizziamo l'alias 'latest' per essere sempre aggiornati
+            model = genai.GenerativeModel('gemini-flash-latest')
+            
+            # Prompt super-dettagliato per evitare Trastevere se sei al Pigneto
+            prompt = f"""
+            Agisci come un esperto local di Roma. 
+            POSIZIONE ATTUALE: {pos_context}
+            
+            DATI:
+            - Orario: {orario}
+            - Meteo: {meteo}
+            - Budget: {budget}
+            - Mezzo di trasporto: {mezzo}
+            - Stanchezza media: {(stanc_lui + stanc_lei)/2}/10.
+            
+            REGOLE RIGIDE:
+            1. Trova posti REALI e APERTI nel raggio di massimo 1-2 km dalla posizione indicata. 
+            2. Se la stanchezza è alta (>7), proponi solo posti a meno di 10 minuti a piedi.
+            3. Evita i soliti posti turistici (niente Centro/Trastevere se sono al Pigneto).
+            4. Le 3 proposte (Lui, Lei, Compromesso) devono essere diverse tra loro (es: un bar, un locale con musica, un bistrot).
+            
+            FORMATO OUTPUT:
+            Per ogni proposta scrivi:
+            - **Nome del Posto** (con indirizzo)
+            - **Perché andarci** (in relazione alla stanchezza e meteo)
+            - **Distanza stimata**
+            - **Link Google Maps** (genera un link del tipo https://www.google.com/maps/search/?api=1&query=Nome+Posto+Roma)
+            """
+
+            with st.spinner("Cercando i posti migliori vicino a te..."):
                 response = model.generate_content(prompt)
                 st.markdown("---")
                 st.markdown(response.text)
+                
         except Exception as e:
-            st.error(f"Errore nella chiamata API: {e}")
-            st.info("Verifica che il modello 'gemini-1.5-flash' sia abilitato per la tua regione e chiave API.")
-else:
-    st.warning("Per favore, inserisci la tua API Key nella sidebar per iniziare.")
+            st.error(f"Si è verificato un errore: {e}")
