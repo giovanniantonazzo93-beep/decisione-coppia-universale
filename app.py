@@ -51,29 +51,35 @@ if st.button("🚀 TROVA COSA FARE"):
     else:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             
-            # IL PROMPT INTELLIGENTE CHE ANALIZZA LA CITTÀ
-            prompt = f"""
-            Siamo a {citta}. Analizza questa città: è una metropoli dispersiva o un centro raccolto? 
-            Adatta i raggi d'azione di conseguenza (es. a Pesaro o Fano ci si sposta diversamente che a Roma).
+            # PROVA AUTOMATICA DEI MODELLI (Così evitiamo l'errore 404)
+            modelli_da_provare = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro']
+            model = None
             
-            DATI ATTUALI:
-            - Meteo: {meteo}
-            - LUI: Stanchezza {stanc_lui}/10, Budget {budg_lui}, Mezzo {mezzo_lui}. Raggio indicativo: {m_lui} metri.
-            - LEI: Stanchezza {stanc_lei}/10, Budget {budg_lei}, Mezzo {mezzo_lei}. Raggio indicativo: {m_lei} metri.
+            for nome_modello in modelli_da_provare:
+                try:
+                    m = genai.GenerativeModel(nome_modello)
+                    # Facciamo un test rapidissimo per vedere se risponde
+                    m.generate_content("test", generation_config={"max_output_tokens": 1})
+                    model = m
+                    break # Se arriviamo qui, il modello funziona!
+                except:
+                    continue # Se fallisce, prova il prossimo della lista
             
-            PROPOSTE RICHIESTE (Reali e attive oggi):
-            1. Opzione LUI (vicino a lui)
-            2. Opzione LEI (vicino a lei)
-            3. COMPROMESSO (media distanze e budget minimo)
-            
-            Spazia tra: Mostre, Cinema, Bowling, Musei, Parchi, Eventi temporanei, Ristoranti.
-            Per ogni posto dai: NOME, PERCHÉ ANDARCI, ORARI, COSTI e LINK ufficiale.
-            """
-            
-            with st.spinner(f"Analizzando {citta} e i vostri parametri..."):
-                res = model.generate_content(prompt)
-                st.markdown(res.text)
+            if model is None:
+                st.error("Nessun modello Gemini sembra rispondere. Controlla la tua API Key su Google AI Studio.")
+            else:
+                prompt = f"""
+                Siamo a {citta}. Analizza questa città e il meteo ({meteo}).
+                LUI: Stanchezza {stanc_lui}/10, Mezzo {mezzo_lui}.
+                LEI: Stanchezza {stanc_lei}/10, Mezzo {mezzo_lei}.
+                Trova 3 opzioni REALI (Lui, Lei, Compromesso).
+                Dai orari, prezzi e link. Usa l'italiano.
+                """
+                
+                with st.spinner(f"Cercando con {model.model_name}..."):
+                    res = model.generate_content(prompt)
+                    st.markdown(res.text)
+                    
         except Exception as e:
-            st.error(f"Si è verificato un errore: {e}")
+            st.error(f"Errore tecnico: {e}")
