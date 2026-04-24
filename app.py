@@ -5,13 +5,26 @@ from streamlit_js_eval import get_geolocation
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
 
+# Sostituisci il vecchio CSS con questo (Interfaccia Mobile Rossa)
 st.markdown("""
     <style>
-    .stButton>button { width: 100%; border-radius: 10px; background-color: #007bff; color: white; }
-    .reportview-container { background: #f0f2f6; }
+    .stApp { background-color: #f8f9fa; }
+    .stButton>button { 
+        width: 100 percento; 
+        height: 70px; 
+        border-radius: 35px; 
+        background-color: #FF4B4B; 
+        color: white; 
+        font-size: 20px; 
+        font-weight: bold; 
+        border: none;
+    }
+    .stButton>button:hover { background-color: #ff3333; color: white; }
     </style>
     """, unsafe_allow_html=True)
 
+# Mantieni la tua API KEY nella barra laterale
+api_key = st.sidebar.text_input("Inserisci Gemini API Key", type="password")
 # --- FUNZIONE LOGICA MORFOLOGICA ---
 def get_urban_context(lat, lon):
     """
