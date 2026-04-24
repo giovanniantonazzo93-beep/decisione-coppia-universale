@@ -1,57 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
 from streamlit_js_eval import get_geolocation
-# --- STILE CUSTOM PER MOBILE FRIENDLY ---
-st.markdown("""
-    <style>
-    /* Sfondo e font generale */
-    .main {
-        background-color: #f5f7f9;
-    }
-    
-    /* Titoli colorati e centrati */
-    h1 {
-        color: #FF4B4B;
-        text-align: center;
-        font-family: 'Trebuchet MS', sans-serif;
-        padding-bottom: 20px;
-    }
-
-    /* Rendiamo i pulsanti grandi e "cicciosi" per il touch */
-    .stButton>button {
-        width: 100%;
-        border-radius: 15px;
-        height: 3.5em;
-        background-color: #FF4B4B;
-        color: white !important;
-        font-weight: bold;
-        font-size: 18px;
-        border: none;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-    }
-    
-    .stButton>button:active {
-        transform: scale(0.98);
-    }
-
-    /* Slider colorati */
-    .stSlider > div > div > div > div {
-        background-color: #FF4B4B;
-    }
-
-    /* Box delle opzioni più leggibili */
-    .stMultiSelect, .stSelectbox, .stTextInput {
-        background-color: white;
-        border-radius: 10px;
-        padding: 5px;
-    }
-
-    /* Nascondi il menu Streamlit per un look più pulito */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    </style>
-    """, unsafe_allow_value=True)
 
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
