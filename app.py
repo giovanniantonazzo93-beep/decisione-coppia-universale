@@ -114,6 +114,8 @@ if 'dati' not in st.session_state:
 
 def avanti():
     st.session_state.step += 1
+def indietro():
+    st.session_state.step -= 1
 
 # --- LOGICA DELLE PAGINE ---
 
@@ -148,6 +150,7 @@ elif st.session_state.step == 2:
     
     st.divider()
     st.write(f"🤖 {random.choice(insulti_meteo[meteo])}")
+    st.button("⬅ Indietro", on_click=indietro)
     st.button("Vediamo il resto ➔", on_click=avanti)
 
 # --- STEP 3: BUDGET ---
@@ -158,6 +161,7 @@ elif st.session_state.step == 3:
     
     st.divider()
     st.info(f"🤖 {random.choice(insulti_budget[budget])}")
+    st.button("⬅ Indietro", on_click=indietro)
     st.button("Continua l'agonia ➔", on_click=avanti)
 
 # --- STEP 4: STANCHEZZA ---
@@ -174,6 +178,7 @@ elif st.session_state.step == 4:
     
     st.divider()
     st.write(f"🤖 {random.choice(insulti_stanchezza[cat])}")
+    st.button("⬅ Indietro", on_click=indietro)
     st.button("Quasi finito ➔", on_click=avanti)
 
 # --- STEP 5: MEZZI ---
@@ -184,12 +189,14 @@ elif st.session_state.step == 5:
     
     st.divider()
     st.write(f"🤖 {random.choice(insulti_mezzi[mezzo])}")
+    st.button("⬅ Indietro", on_click=indietro)
     st.button("Ultima scelta ➔", on_click=avanti)
 
 # --- STEP 6: CATEGORIE E GENERAZIONE ---
 elif st.session_state.step == 6:
     st.subheader("🎯 Cosa cercate?")
     categorie = st.multiselect("Seleziona:", ["Cibo", "Bere", "Cultura", "Relax"], default=["Cibo"])
+    st.button("⬅ Indietro", on_click=indietro) 
     
     col1, col2 = st.columns(2)
     with col1:
