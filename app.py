@@ -150,10 +150,15 @@ if st.session_state.step == 1:
 # --- STEP 2: METEO ---
 elif st.session_state.step == 2:
     st.subheader("🕒 Il momento del disagio")
-    orario = st.select_slider("Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"])
-    meteo = st.selectbox("Meteo attuale", ["Sole", "Pioggia", "Vento/Freddo"])
     
-    st.session_state.commento_ai = random.choice(insulti_meteo[meteo])
+    # Usiamo la key per l'orario
+    orario = st.select_slider("Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"], key="sel_orario")
+    
+    # Usiamo la key per il meteo e aggiorniamo istantaneamente il commento
+    meteo = st.selectbox("Meteo attuale", ["Sole", "Pioggia", "Vento/Freddo"], key="sel_meteo")
+    
+    # Il commento ora legge direttamente dalla key della selectbox
+    st.session_state.commento_ai = random.choice(insulti_meteo[st.session_state.sel_meteo])
     
     st.divider()
     
@@ -161,16 +166,20 @@ elif st.session_state.step == 2:
         indietro()
 
     if st.button("Vediamo il resto ➔"):
-        st.session_state.dati['orario'] = orario
-        st.session_state.dati['meteo'] = meteo
+        # Salviamo i valori definitivi dalle key
+        st.session_state.dati['orario'] = st.session_state.sel_orario
+        st.session_state.dati['meteo'] = st.session_state.sel_meteo
         avanti()
 
 # --- STEP 3: BUDGET ---
 elif st.session_state.step == 3:
     st.subheader("💰 Quanti soldi volete sprecare?")
-    budget = st.select_slider("Budget", options=["€", "€€", "€€€"])
     
-    st.session_state.commento_ai = random.choice(insulti_budget[budget])
+    # Usiamo la key per il budget
+    budget = st.select_slider("Budget", options=["€", "€€", "€€€"], key="sel_budget")
+    
+    # Il commento legge istantaneamente dalla key del selettore
+    st.session_state.commento_ai = random.choice(insulti_budget[st.session_state.sel_budget])
     
     st.divider()
     
@@ -178,18 +187,29 @@ elif st.session_state.step == 3:
         indietro()
 
     if st.button("Continua l'agonia ➔"):
-        st.session_state.dati['budget'] = budget
+        # Salviamo il valore definitivo dalla key
+        st.session_state.dati['budget'] = st.session_state.sel_budget
         avanti()
 
 # --- STEP 4: STANCHEZZA ---
 elif st.session_state.step == 4:
     st.subheader("😫 Livello di agonia")
-    l = st.slider("Stanchezza Lui", 1, 10, 5)
-    s = st.slider("Stanchezza Lei", 1, 10, 5)
     
-    # Aggiornamento istantaneo del commento
-    media_live = (l + s) / 2
-    cat_live = "riposati" if media_live <= 4 else "medi" if media_live <= 7 else "distrutti"
+    # Usiamo le key per i cursori
+    l = st.slider("Stanchezza Lui", 1, 10, 5, key="sel_lui")
+    s = st.slider("Stanchezza Lei", 1, 10, 5, key="sel_lei")
+    
+    # Calcoliamo la categoria leggendo direttamente dalle key per evitare ritardi
+    media_live = (st.session_state.sel_lui + st.session_state.sel_lei) / 2
+    
+    if media_live <= 4:
+        cat_live = "riposati"
+    elif media_live <= 7:
+        cat_live = "medi"
+    else:
+        cat_live = "distrutti"
+    
+    # Aggiornamento istantaneo del commento basato sui cursori
     st.session_state.commento_ai = random.choice(insulti_stanchezza[cat_live])
     
     st.divider()
@@ -198,15 +218,18 @@ elif st.session_state.step == 4:
         indietro()
 
     if st.button("Quasi finito ➔"):
-        st.session_state.dati.update({'lui': l, 'lei': s})
+        # Salviamo i valori definitivi
+        st.session_state.dati.update({'lui': st.session_state.sel_lui, 'lei': st.session_state.sel_lei})
         avanti()
 # --- STEP 5: MEZZI ---
 elif st.session_state.step == 5:
     st.subheader("🚗 Come volete trascinarvi?")
-    mezzo = st.selectbox("Spostamento", ["A piedi", "Mezzi pubblici", "Auto"])
     
-    # Aggiornamento istantaneo del commento
-    st.session_state.commento_ai = random.choice(insulti_mezzi[mezzo])
+    # Usiamo la key per agganciare subito la scelta del mezzo
+    mezzo = st.selectbox("Spostamento", ["A piedi", "Mezzi pubblici", "Auto"], key="sel_mezzo")
+    
+    # Il commento legge istantaneamente il valore aggiornato dalla key
+    st.session_state.commento_ai = random.choice(insulti_mezzi[st.session_state.sel_mezzo])
     
     st.divider()
     
@@ -214,13 +237,16 @@ elif st.session_state.step == 5:
         indietro()
 
     if st.button("Ultima scelta ➔"):
-        st.session_state.dati['mezzo'] = mezzo
+        # Salviamo il mezzo definitivo
+        st.session_state.dati['mezzo'] = st.session_state.sel_mezzo
         avanti()
 
 # --- STEP 6: CATEGORIE E GENERAZIONE ---
 elif st.session_state.step == 6:
     st.subheader("🎯 Cosa cercate?")
-    categorie = st.multiselect("Seleziona:", ["Cibo", "Bere", "Cultura", "Relax"], default=["Cibo"])
+    
+    # Usiamo la key per le categorie
+    categorie = st.multiselect("Seleziona:", ["Cibo", "Bere", "Cultura", "Relax"], default=["Cibo"], key="sel_categorie")
     
     if st.button("⬅ Indietro"):
         indietro()
@@ -232,6 +258,7 @@ elif st.session_state.step == 6:
         if st.button("🎰 STUPISCIMI!"):
             st.session_state.dati['stupiscimi'] = True
             st.session_state.dati['cat'] = "Qualcosa di bizzarro"
+            # Il commento viene impostato un istante prima del salto allo step 7
             st.session_state.commento_ai = "Oh, cercate l'effetto wow? Preparatevi a rimanere delusi."
             st.session_state.step = 7
             st.rerun()
@@ -239,7 +266,8 @@ elif st.session_state.step == 6:
     with col2:
         if st.button("GENERA OPZIONI"):
             st.session_state.dati['stupiscimi'] = False
-            st.session_state.dati['cat'] = categorie
+            # Salviamo le categorie scelte dalla key
+            st.session_state.dati['cat'] = st.session_state.sel_categorie
             st.session_state.commento_ai = "Analizzo le vostre mediocri opzioni... un momento."
             st.session_state.step = 7
             st.rerun()
@@ -250,42 +278,48 @@ elif st.session_state.step == 7:
     
     d = st.session_state.dati
     
+    # Verifichiamo se dobbiamo ancora generare la risposta definitiva
     if "Analizzo" in st.session_state.commento_ai or "Oh, cercate" in st.session_state.commento_ai:
         try:
             genai.configure(api_key=api_key) 
             model = genai.GenerativeModel('gemini-1.5-flash')
             
+            # Calcolo raggio basato sulla stanchezza salvata
             stanchezza_max = max(d.get('lui', 5), d.get('lei', 5))
             raggio = 500 if stanchezza_max > 7 else 800
 
             prompt = f"""
             Agisci come il 'Decision Bot Cinico'. Sei sarcastico e arrogante.
-            POSIZIONE: {d.get('pos')}
-            DATI COPPIA: Stanchezza Lui {d.get('lui')}, Lei {d.get('lei')}. 
+            POSIZIONE ATTUALE: {d.get('pos')}
+            DATI COPPIA: Stanchezza Lui {d.get('lui')}/10, Lei {d.get('lei')}/10. 
             Budget: {d.get('budget')}. Meteo: {d.get('meteo')}. Mezzo: {d.get('mezzo')}.
             ATTIVITÀ RICHIESTE: {d.get('cat')}
             
             LOGICA GEOGRAFICA:
-            1. Il raggio massimo è di {raggio} metri.
-            2. Se siamo in un borgo o città collinare, aumenta il raggio del 20 percento ma insultali per la pendenza.
+            1. Suggerisci posti reali entro un raggio di {raggio} metri dalla posizione fornita.
+            2. Se la zona è collinare, aumenta il raggio del 20% ma insultali per la fatica che faranno.
             
             FORMATO OUTPUT:
-            - Esordio acido sulla loro condizione misera.
-            - 3 opzioni REALI (Nome, Distanza, Il Verdetto cattivo).
+            - Esordio acido sulla loro condizione.
+            - 3 opzioni REALI (Nome, Distanza approssimativa, Il Verdetto cattivo).
             - Link Google Maps per ognuna.
             """
 
             with st.spinner("Sto decidendo il vostro destino... spero sia tragico."):
                 response = model.generate_content(prompt)
+                # Sostituiamo il commento temporaneo con la sentenza finale di Gemini
                 st.session_state.commento_ai = response.text
                 st.rerun()
                 
         except Exception as e:
             st.error(f"Errore: Il Genio ha avuto un travaso di bile. Dettaglio: {e}")
 
+    # Visualizzazione della sentenza finale (Markdown per link e grassetti)
     st.markdown(st.session_state.commento_ai)
 
     st.divider()
+    
+    # Bottone per resettare tutto e ricominciare
     if st.button("Ricomincia il calvario"):
         st.session_state.step = 1
         st.session_state.dati = {}
