@@ -6,7 +6,12 @@ from streamlit_js_eval import get_geolocation
 api_key = st.secrets["GEMINI_KEY"]
 
 # --- CONFIGURAZIONE ---
-st.set_page_config(page_title="Decision Bot GPS", page_icon="📍", layout="centered")
+st.set_page_config(
+    page_title="Judgmental Genius", # Oppure "Bitter Oracle" o "The Harsh Reality"
+    page_icon="🤖", 
+    layout="centered", 
+    initial_sidebar_state="collapsed"
+)
 
 # CSS "IMPATTO TOTALE": Ingrandisce slider, selettori e bottoni
 st.markdown("""
