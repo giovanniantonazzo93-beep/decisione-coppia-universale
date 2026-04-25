@@ -164,7 +164,7 @@ elif st.session_state.step == 2:
         st.session_state.dati['orario'] = orario
         st.session_state.dati['meteo'] = meteo
         avanti()
-Python
+
 # --- STEP 3: BUDGET ---
 elif st.session_state.step == 3:
     st.subheader("💰 Quanti soldi volete sprecare?")
