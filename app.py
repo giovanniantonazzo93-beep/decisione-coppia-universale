@@ -105,25 +105,25 @@ insulti_mezzi = {
     "Auto": ["In auto? Pigri e inquinatori. Almeno non dovrete camminare, poverini.", "🚗 Spero che passiate mezz'ora a cercare parcheggio."]
 }
 
-# --- ORA LA LOGICA DI NAVIGAZIONE ---
+# --- CONFIGURAZIONE NAVIGAZIONE E DIARIO (UNICO BLOCCO) ---
 if 'step' not in st.session_state:
     st.session_state.step = 1
 if 'dati' not in st.session_state:
     st.session_state.dati = {}
+if 'commento_ai' not in st.session_state:
+    st.session_state.commento_ai = "Benvenuto. Vediamo di che morte dovete morire."
 
 def avanti():
     st.session_state.step += 1
+    st.rerun()
 
-# --- INIZIALIZZAZIONE ---
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'dati' not in st.session_state:
-    st.session_state.dati = {}
-
-def avanti():
-    st.session_state.step += 1
 def indietro():
     st.session_state.step -= 1
+    st.rerun()
+
+# --- DISPLAY FISSO PER IL TELEFONO ---
+# Questa riga mostra il commento del bot in alto in ogni pagina
+st.info(f"🤖 {st.session_state.commento_ai}")
 
 # --- LOGICA DELLE PAGINE ---
 
@@ -153,117 +153,174 @@ elif st.session_state.step == 2:
     orario = st.select_slider("Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"])
     meteo = st.selectbox("Meteo attuale", ["Sole", "Pioggia", "Vento/Freddo"])
     
-    st.session_state.dati['orario'] = orario
-    st.session_state.dati['meteo'] = meteo
-    
     st.divider()
-    st.write(f"🤖 {random.choice(insulti_meteo[meteo])}")
-    st.button("⬅ Indietro", on_click=indietro)
-    st.button("Vediamo il resto ➔", on_click=avanti)
+    
+    # Bottone Indietro
+    if st.button("⬅ Indietro"):
+        indietro()
 
+    # Bottone Avanti: Salva tutto e genera l'insulto
+    if st.button("Vediamo il resto ➔"):
+        st.session_state.dati['orario'] = orario
+        st.session_state.dati['meteo'] = meteo
+        
+        # Salviamo l'insulto nel diario prima di cambiare pagina
+        st.session_state.commento_ai = random.choice(insulti_meteo[meteo])
+        
+        avanti()
 # --- STEP 3: BUDGET ---
 elif st.session_state.step == 3:
     st.subheader("💰 Quanti soldi volete sprecare?")
     budget = st.select_slider("Budget", options=["€", "€€", "€€€"])
-    st.session_state.dati['budget'] = budget
     
     st.divider()
-    st.info(f"🤖 {random.choice(insulti_budget[budget])}")
-    st.button("⬅ Indietro", on_click=indietro)
-    st.button("Continua l'agonia ➔", on_click=avanti)
+    
+    if st.button("⬅ Indietro"):
+        indietro()
+
+    if st.button("Continua l'agonia ➔"):
+        st.session_state.dati['budget'] = budget
+        
+        # Salviamo l'insulto sul budget nel diario
+        st.session_state.commento_ai = random.choice(insulti_budget[budget])
+        
+        avanti()
 
 # --- STEP 4: STANCHEZZA ---
 elif st.session_state.step == 4:
     st.subheader("😫 Livello di agonia")
     l = st.slider("Stanchezza Lui", 1, 10, 5)
     s = st.slider("Stanchezza Lei", 1, 10, 5)
-    st.session_state.dati.update({'lui': l, 'lei': s})
-    
-    media = (l + s) / 2
-    if media <= 4: cat = "riposati"
-    elif media <= 7: cat = "medi"
-    else: cat = "distrutti"
     
     st.divider()
-    st.write(f"🤖 {random.choice(insulti_stanchezza[cat])}")
-    st.button("⬅ Indietro", on_click=indietro)
-    st.button("Quasi finito ➔", on_click=avanti)
+    
+    if st.button("⬅ Indietro"):
+        indietro()
+
+    if st.button("Quasi finito ➔"):
+        # Salviamo i dati
+        st.session_state.dati.update({'lui': l, 'lei': s})
+        
+        # Calcoliamo la categoria per scegliere l'insulto giusto
+        media = (l + s) / 2
+        if media <= 4: 
+            cat = "riposati"
+        elif media <= 7: 
+            cat = "medi"
+        else: 
+            cat = "distrutti"
+        
+        # Salviamo l'insulto nel diario
+        st.session_state.commento_ai = random.choice(insulti_stanchezza[cat])
+        
+        avanti()
 
 # --- STEP 5: MEZZI ---
 elif st.session_state.step == 5:
     st.subheader("🚗 Come volete trascinarvi?")
     mezzo = st.selectbox("Spostamento", ["A piedi", "Mezzi pubblici", "Auto"])
-    st.session_state.dati['mezzo'] = mezzo
     
     st.divider()
-    st.write(f"🤖 {random.choice(insulti_mezzi[mezzo])}")
-    st.button("⬅ Indietro", on_click=indietro)
-    st.button("Ultima scelta ➔", on_click=avanti)
+    
+    if st.button("⬅ Indietro"):
+        indietro()
+
+    if st.button("Ultima scelta ➔"):
+        # Salviamo il mezzo scelto
+        st.session_state.dati['mezzo'] = mezzo
+        
+        # Salviamo l'insulto nel diario prima di andare avanti
+        st.session_state.commento_ai = random.choice(insulti_mezzi[mezzo])
+        
+        avanti()
 
 # --- STEP 6: CATEGORIE E GENERAZIONE ---
 elif st.session_state.step == 6:
     st.subheader("🎯 Cosa cercate?")
     categorie = st.multiselect("Seleziona:", ["Cibo", "Bere", "Cultura", "Relax"], default=["Cibo"])
-    st.button("⬅ Indietro", on_click=indietro) 
+    
+    if st.button("⬅ Indietro"):
+        indietro()
+    
+    st.divider()
     
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🎰 STUPISCIMI!"):
             st.session_state.dati['stupiscimi'] = True
             st.session_state.dati['cat'] = "Qualcosa di bizzarro"
+            st.session_state.commento_ai = "Oh, cercate l'effetto wow? Preparatevi a rimanere delusi."
             st.session_state.step = 7
             st.rerun()
+            
     with col2:
         if st.button("GENERA OPZIONI"):
             st.session_state.dati['stupiscimi'] = False
             st.session_state.dati['cat'] = categorie
+            st.session_state.commento_ai = "Analizzo le vostre mediocri opzioni... un momento."
             st.session_state.step = 7
             st.rerun()
 
+Ci siamo, il gran finale. Nello Step 7 ho aggiunto un piccolo trucco: salviamo la risposta di Gemini direttamente nel "diario" (commento_ai).
+
+Perché? Perché se il telefono ricarica la pagina mentre stai leggendo i risultati, Gemini non dovrà lavorare due volte e tu non perderai la tua preziosa sentenza acida.
+
+Sostituisci l'ultimo blocco con questo:
+
+Python
 # --- STEP 7: IL VERDETTO (Gemini entra in azione) ---
 elif st.session_state.step == 7:
     st.subheader("🔮 Il Verdetto del Bot")
     
-    # Non serve più il controllo "if not api_key" perché la carichiamo all'avvio
-    try:
-        genai.configure(api_key=api_key) 
-        model = genai.GenerativeModel('gemini-3-flash-preview')
-        
-        # Recuperiamo i dati salvati
-        d = st.session_state.dati
-        
-        # Calcolo raggio basato sulla stanchezza
-        stanchezza_max = max(d.get('lui', 5), d.get('lei', 5))
-        raggio = 500 if stanchezza_max > 7 else 800
-
-        prompt = f"""
-        Agisci come il 'Decision Bot Cinico'. Sei sarcastico e arrogante.
-        POSIZIONE: {d.get('pos')}
-        DATI COPPIA: Stanchezza Lui {d.get('lui')}, Lei {d.get('lei')}. 
-        Budget: {d.get('budget')}. Meteo: {d.get('meteo')}. Mezzo: {d.get('mezzo')}.
-        ATTIVITÀ RICHIESTE: {d.get('cat')}
-        
-        LOGICA GEOGRAFICA:
-        1. Il raggio massimo è di {raggio} metri.
-        2. Se siamo in un borgo o città collinare, aumenta il raggio del 20 percento ma insultali per la pendenza.
-        
-        FORMATO OUTPUT:
-        - Esordio acido sulla loro condizione misera.
-        - 3 opzioni REALI (Nome, Distanza, Il Verdetto cattivo).
-        - Link Google Maps per ognuna.
-        """
-
-        with st.spinner("Sto decidendo il vostro destino... spero sia tragico."):
-            response = model.generate_content(prompt)
-            st.markdown(response.text)
+    # Recuperiamo i dati salvati
+    d = st.session_state.dati
+    
+    # Se il commento non è ancora una sentenza vera e propria, interroghiamo Gemini
+    # Usiamo un controllo per evitare di chiamare l'API a ogni refresh del telefono
+    if "Analizzo" in st.session_state.commento_ai or "Oh, cercate" in st.session_state.commento_ai:
+        try:
+            genai.configure(api_key=api_key) 
+            model = genai.GenerativeModel('gemini-1.5-flash') # Ho messo 1.5-flash che è stabilissimo
             
-    except Exception as e:
-        st.error(f"Errore: Assicurati di aver messo la chiave nei Secrets di Streamlit! Dettaglio: {e}")
+            # Calcolo raggio basato sulla stanchezza
+            stanchezza_max = max(d.get('lui', 5), d.get('lei', 5))
+            raggio = 500 if stanchezza_max > 7 else 800
+
+            prompt = f"""
+            Agisci come il 'Decision Bot Cinico'. Sei sarcastico e arrogante.
+            POSIZIONE: {d.get('pos')}
+            DATI COPPIA: Stanchezza Lui {d.get('lui')}, Lei {d.get('lei')}. 
+            Budget: {d.get('budget')}. Meteo: {d.get('meteo')}. Mezzo: {d.get('mezzo')}.
+            ATTIVITÀ RICHIESTE: {d.get('cat')}
+            
+            LOGICA GEOGRAFICA:
+            1. Il raggio massimo è di {raggio} metri.
+            2. Se siamo in un borgo o città collinare, aumenta il raggio del 20 percento ma insultali per la pendenza.
+            
+            FORMATO OUTPUT:
+            - Esordio acido sulla loro condizione misera.
+            - 3 opzioni REALI (Nome, Distanza, Il Verdetto cattivo).
+            - Link Google Maps per ognuna.
+            """
+
+            with st.spinner("Sto decidendo il vostro destino... spero sia tragico."):
+                response = model.generate_content(prompt)
+                # Salviamo la sentenza nel diario così rimane fissa sul telefono
+                st.session_state.commento_ai = response.text
+                st.rerun() # Un ultimo refresh per mostrare tutto pulito
+                
+        except Exception as e:
+            st.error(f"Errore: Il Genio ha avuto un travaso di bile. Dettaglio: {e}")
+
+    # Visualizzazione della sentenza finale
+    st.markdown(st.session_state.commento_ai)
 
     st.divider()
     if st.button("Ricomincia il calvario"):
+        # Reset totale del diario
         st.session_state.step = 1
         st.session_state.dati = {}
+        st.session_state.commento_ai = "Bentornati. Pronti per un altro giro di umiliazioni?"
         st.rerun()
     
 
