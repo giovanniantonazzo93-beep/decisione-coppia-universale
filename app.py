@@ -261,13 +261,7 @@ elif st.session_state.step == 6:
             st.session_state.step = 7
             st.rerun()
 
-Ci siamo, il gran finale. Nello Step 7 ho aggiunto un piccolo trucco: salviamo la risposta di Gemini direttamente nel "diario" (commento_ai).
 
-Perché? Perché se il telefono ricarica la pagina mentre stai leggendo i risultati, Gemini non dovrà lavorare due volte e tu non perderai la tua preziosa sentenza acida.
-
-Sostituisci l'ultimo blocco con questo:
-
-Python
 # --- STEP 7: IL VERDETTO (Gemini entra in azione) ---
 elif st.session_state.step == 7:
     st.subheader("🔮 Il Verdetto del Bot")
