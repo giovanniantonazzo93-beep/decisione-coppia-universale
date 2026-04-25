@@ -130,200 +130,332 @@ st.info(f"🤖 {st.session_state.commento_ai}")
 # --- STEP 1: POSIZIONE ---
 if st.session_state.step == 1:
     st.subheader("📍 Dove siete finiti?")
-    modo = st.radio("Scegli come localizzarvi:", ["GPS Live", "Inserimento Manuale"])
+    
+    # Funzione per cambiare l'insulto solo quando serve
+    def nuovo_insulto_pos():
+        st.session_state.commento_ai = random.choice(insulti_pos)
+
+    modo = st.radio("Scegli come localizzarvi:", ["GPS Live", "Inserimento Manuale"], key="modo_pos", on_change=nuovo_insulto_pos)
     
     if modo == "GPS Live":
         loc = get_geolocation()
         if loc:
             st.session_state.dati['pos'] = f"{loc['coords']['latitude']}, {loc['coords']['longitude']}"
             st.success("Vi ho trovati. Purtroppo.")
-            st.write(f"🤖 {random.choice(insulti_pos)}")
-            st.button("Avanti ➔", on_click=avanti)
+            # Se non c'è ancora un commento, ne mettiamo uno
+            if "commento_ai" not in st.session_state or st.session_state.commento_ai == "Bentornati...":
+                nuovo_insulto_pos()
+            
+            st.write(f"🤖 {st.session_state.commento_ai}")
+            
+            if st.button("Avanti ➔"):
+                avanti()
         else:
             st.info("In attesa del GPS... muovetevi o date i permessi!")
     else:
-        citta = st.text_input("Città", "Roma")
-        st.session_state.dati['pos'] = citta
-        st.write(f"🤖 {random.choice(insulti_pos)}")
-        st.button("Conferma Città ➔", on_click=avanti)
+        # Inserimento manuale
+        citta = st.text_input("Città o indirizzo", value=st.session_state.dati.get('pos', 'Roma'), key="input_citta")
+        
+        # Generiamo l'insulto solo se l'utente ha scritto qualcosa
+        if "commento_ai" not in st.session_state or st.session_state.commento_ai == "":
+            nuovo_insulto_pos()
+            
+        st.write(f"🤖 {st.session_state.commento_ai}")
+        
+        if st.button("Conferma Città ➔"):
+            st.session_state.dati['pos'] = st.session_state.input_citta
+            # Reset del commento per lo step successivo così non rimane quello della posizione
+            st.session_state.commento_ai = "" 
+            avanti()
 
 # --- STEP 2: METEO ---
 elif st.session_state.step == 2:
     st.subheader("🕒 Il momento del disagio")
     
-    # Usiamo la key per l'orario
-    orario = st.select_slider("Quando?", options=["Mattina", "Pomeriggio", "Sera", "Notte"], key="sel_orario")
+    # Funzione per cambiare l'insulto solo quando cambia il meteo
+    def aggiorna_insulto_meteo():
+        st.session_state.commento_ai = random.choice(insulti_meteo[st.session_state.sel_meteo])
+
+    # Slider per l'orario (senza trigger per non incrociare i dati)
+    st.select_slider(
+        "Quando?", 
+        options=["Mattina", "Pomeriggio", "Sera", "Notte"], 
+        key="sel_orario"
+    )
     
-    # Usiamo la key per il meteo e aggiorniamo istantaneamente il commento
-    meteo = st.selectbox("Meteo attuale", ["Sole", "Pioggia", "Vento/Freddo"], key="sel_meteo")
+    # Selectbox con trigger chirurgico
+    st.selectbox(
+        "Meteo attuale", 
+        ["Sole", "Pioggia", "Vento/Freddo"], 
+        key="sel_meteo",
+        on_change=aggiorna_insulto_meteo
+    )
     
-    # Il commento ora legge direttamente dalla key della selectbox
-    st.session_state.commento_ai = random.choice(insulti_meteo[st.session_state.sel_meteo])
+    # Inizializzazione: se entriamo nello step e non c'è un commento meteo, ne mettiamo uno
+    if not any(insulto in st.session_state.commento_ai for lista in insulti_meteo.values() for insulto in lista):
+        aggiorna_insulto_meteo()
+    
+    # Visualizzazione del commento (sempre aggiornato)
+    st.write(f"🤖 {st.session_state.commento_ai}")
     
     st.divider()
     
-    if st.button("⬅ Indietro"):
-        indietro()
+    col_nav1, col_nav2 = st.columns(2)
+    with col_nav1:
+        if st.button("⬅ Indietro"):
+            indietro()
 
-    if st.button("Vediamo il resto ➔"):
-        # Salviamo i valori definitivi dalle key
-        st.session_state.dati['orario'] = st.session_state.sel_orario
-        st.session_state.dati['meteo'] = st.session_state.sel_meteo
-        avanti()
-
+    with col_nav2:
+        if st.button("Vediamo il resto ➔"):
+            # Salvataggio dati e pulizia commento per lo step successivo
+            st.session_state.dati['orario'] = st.session_state.sel_orario
+            st.session_state.dati['meteo'] = st.session_state.sel_meteo
+            st.session_state.commento_ai = "" # Reset per non portarsi dietro il meteo nel budget
+            avanti()
 # --- STEP 3: BUDGET ---
 elif st.session_state.step == 3:
     st.subheader("💰 Quanti soldi volete sprecare?")
     
-    # Usiamo la key per il budget
-    budget = st.select_slider("Budget", options=["€", "€€", "€€€"], key="sel_budget")
+    # Funzione per cambiare l'insulto solo quando muovi lo slider del budget
+    def aggiorna_insulto_budget():
+        st.session_state.commento_ai = random.choice(insulti_budget[st.session_state.sel_budget])
+
+    # Slider per il budget con trigger chirurgico
+    st.select_slider(
+        "Budget", 
+        options=["€", "€€", "€€€"], 
+        key="sel_budget",
+        on_change=aggiorna_insulto_budget
+    )
     
-    # Il commento legge istantaneamente dalla key del selettore
-    st.session_state.commento_ai = random.choice(insulti_budget[st.session_state.sel_budget])
+    # Inizializzazione: se entriamo e il commento è vuoto (o vecchio), ne mettiamo uno sul budget
+    if st.session_state.commento_ai == "" or not any(insulto in st.session_state.commento_ai for lista in insulti_budget.values() for insulto in lista):
+        aggiorna_insulto_budget()
+    
+    # Mostriamo l'insulto sui soldi
+    st.write(f"🤖 {st.session_state.commento_ai}")
     
     st.divider()
     
-    if st.button("⬅ Indietro"):
-        indietro()
+    col_nav1, col_nav2 = st.columns(2)
+    with col_nav1:
+        if st.button("⬅ Indietro"):
+            indietro()
 
-    if st.button("Continua l'agonia ➔"):
-        # Salviamo il valore definitivo dalla key
-        st.session_state.dati['budget'] = st.session_state.sel_budget
-        avanti()
-
+    with col_nav2:
+        if st.button("Continua l'agonia ➔"):
+            # Salviamo il valore definitivo
+            st.session_state.dati['budget'] = st.session_state.sel_budget
+            # Puliamo il commento per non portarlo nello step della stanchezza
+            st.session_state.commento_ai = "" 
+            avanti()
 # --- STEP 4: STANCHEZZA ---
 elif st.session_state.step == 4:
     st.subheader("😫 Livello di agonia")
     
-    # Usiamo le key per i cursori
-    l = st.slider("Stanchezza Lui", 1, 10, 5, key="sel_lui")
-    s = st.slider("Stanchezza Lei", 1, 10, 5, key="sel_lei")
+    # Funzione per calcolare la categoria e aggiornare l'insulto
+    def aggiorna_insulto_stanchezza():
+        # Recuperiamo i valori direttamente dalle key
+        l_val = st.session_state.sel_lui
+        s_val = st.session_state.sel_lei
+        media = (l_val + s_val) / 2
+        
+        if media <= 4:
+            cat = "riposati"
+        elif media <= 7:
+            cat = "medi"
+        else:
+            cat = "distrutti"
+        
+        st.session_state.commento_ai = random.choice(insulti_stanchezza[cat])
+
+    # Slider Lui
+    st.slider("Stanchezza Lui", 1, 10, 5, key="sel_lui", on_change=aggiorna_insulto_stanchezza)
     
-    # Calcoliamo la categoria leggendo direttamente dalle key per evitare ritardi
-    media_live = (st.session_state.sel_lui + st.session_state.sel_lei) / 2
+    # Slider Lei
+    st.slider("Stanchezza Lei", 1, 10, 5, key="sel_lei", on_change=aggiorna_insulto_stanchezza)
     
-    if media_live <= 4:
-        cat_live = "riposati"
-    elif media_live <= 7:
-        cat_live = "medi"
-    else:
-        cat_live = "distrutti"
+    # Inizializzazione se il commento è vuoto o non pertinente
+    if st.session_state.commento_ai == "" or not any(insulto in st.session_state.commento_ai for lista in insulti_stanchezza.values() for insulto in lista):
+        aggiorna_insulto_stanchezza()
     
-    # Aggiornamento istantaneo del commento basato sui cursori
-    st.session_state.commento_ai = random.choice(insulti_stanchezza[cat_live])
+    # Mostriamo l'insulto sulla vostra pigrizia
+    st.write(f"🤖 {st.session_state.commento_ai}")
     
     st.divider()
     
-    if st.button("⬅ Indietro"):
-        indietro()
+    col_nav1, col_nav2 = st.columns(2)
+    with col_nav1:
+        if st.button("⬅ Indietro"):
+            indietro()
 
-    if st.button("Quasi finito ➔"):
-        # Salviamo i valori definitivi
-        st.session_state.dati.update({'lui': st.session_state.sel_lui, 'lei': st.session_state.sel_lei})
-        avanti()
+    with col_nav2:
+        if st.button("Quasi finito ➔"):
+            # Salviamo i valori definitivi
+            st.session_state.dati.update({
+                'lui': st.session_state.sel_lui, 
+                'lei': st.session_state.sel_lei
+            })
+            # Puliamo per il prossimo step
+            st.session_state.commento_ai = "" 
+            avanti()
 # --- STEP 5: MEZZI ---
 elif st.session_state.step == 5:
     st.subheader("🚗 Come volete trascinarvi?")
     
-    # Usiamo la key per agganciare subito la scelta del mezzo
-    mezzo = st.selectbox("Spostamento", ["A piedi", "Mezzi pubblici", "Auto"], key="sel_mezzo")
+    # Funzione per aggiornare l'insulto solo quando cambia il mezzo
+    def aggiorna_insulto_mezzi():
+        scelta = st.session_state.sel_mezzo
+        st.session_state.commento_ai = random.choice(insulti_mezzi[scelta])
+
+    # Selectbox con trigger on_change
+    st.selectbox(
+        "Spostamento", 
+        ["A piedi", "Mezzi pubblici", "Auto"], 
+        key="sel_mezzo",
+        on_change=aggiorna_insulto_mezzi
+    )
     
-    # Il commento legge istantaneamente il valore aggiornato dalla key
-    st.session_state.commento_ai = random.choice(insulti_mezzi[st.session_state.sel_mezzo])
+    # Inizializzazione: se entriamo e il commento è vuoto o vecchio, ne generiamo uno
+    if st.session_state.commento_ai == "" or not any(insulto in st.session_state.commento_ai for lista in insulti_mezzi.values() for insulto in lista):
+        aggiorna_insulto_mezzi()
+        
+    # Visualizziamo l'insulto specifico per il mezzo
+    st.write(f"🤖 {st.session_state.commento_ai}")
     
     st.divider()
     
-    if st.button("⬅ Indietro"):
-        indietro()
+    col_nav1, col_nav2 = st.columns(2)
+    with col_nav1:
+        if st.button("⬅ Indietro"):
+            indietro()
 
-    if st.button("Ultima scelta ➔"):
-        # Salviamo il mezzo definitivo
-        st.session_state.dati['mezzo'] = st.session_state.sel_mezzo
-        avanti()
+    with col_nav2:
+        if st.button("Ultima scelta ➔"):
+            # Salviamo il mezzo definitivo
+            st.session_state.dati['mezzo'] = st.session_state.sel_mezzo
+            # Pulizia per le categorie finali
+            st.session_state.commento_ai = "" 
+            avanti()
 
 # --- STEP 6: CATEGORIE E GENERAZIONE ---
 elif st.session_state.step == 6:
     st.subheader("🎯 Cosa cercate?")
     
-    # Usiamo la key per le categorie
-    categorie = st.multiselect("Seleziona:", ["Cibo", "Bere", "Cultura", "Relax"], default=["Cibo"], key="sel_categorie")
+    # Multiselect per le categorie
+    st.multiselect(
+        "Seleziona una o più opzioni:", 
+        ["Cibo", "Bere", "Cultura", "Relax"], 
+        default=["Cibo"], 
+        key="sel_categorie"
+    )
     
-    if st.button("⬅ Indietro"):
-        indietro()
+    # Visualizziamo un piccolo incoraggiamento acido se non c'è già un commento
+    if st.session_state.commento_ai == "":
+        st.session_state.commento_ai = "Scegliete in fretta, la mia pazienza ha un limite."
+    
+    st.write(f"🤖 {st.session_state.commento_ai}")
     
     st.divider()
     
+    # Navigazione
+    col_back, col_space = st.columns([1, 3])
+    with col_back:
+        if st.button("⬅ Indietro"):
+            indietro()
+    
+    st.write(" ") # Spazio estetico
+    
+    # Bottoni di azione finale
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🎰 STUPISCIMI!"):
+        if st.button("🎰 STUPISCIMI!", use_container_width=True):
             st.session_state.dati['stupiscimi'] = True
-            st.session_state.dati['cat'] = "Qualcosa di bizzarro"
-            # Il commento viene impostato un istante prima del salto allo step 7
+            st.session_state.dati['cat'] = "Qualcosa di bizzarro e inaspettato"
+            # Questo commento serve da trigger per lo Step 7
             st.session_state.commento_ai = "Oh, cercate l'effetto wow? Preparatevi a rimanere delusi."
             st.session_state.step = 7
             st.rerun()
             
     with col2:
-        if st.button("GENERA OPZIONI"):
-            st.session_state.dati['stupiscimi'] = False
-            # Salviamo le categorie scelte dalla key
-            st.session_state.dati['cat'] = st.session_state.sel_categorie
-            st.session_state.commento_ai = "Analizzo le vostre mediocri opzioni... un momento."
-            st.session_state.step = 7
-            st.rerun()
-
+        if st.button("GENERA OPZIONI", type="primary", use_container_width=True):
+            if not st.session_state.sel_categorie:
+                st.error("Seleziona almeno una categoria, non fatemi perdere tempo!")
+            else:
+                st.session_state.dati['stupiscimi'] = False
+                st.session_state.dati['cat'] = st.session_state.sel_categorie
+                # Questo commento serve da trigger per lo Step 7
+                st.session_state.commento_ai = "Analizzo le vostre mediocri opzioni... un momento."
+                st.session_state.step = 7
+                st.rerun()
 # --- STEP 7: IL VERDETTO (Gemini entra in azione) ---
 elif st.session_state.step == 7:
     st.subheader("🔮 Il Verdetto del Bot")
     
     d = st.session_state.dati
     
-    # Verifichiamo se dobbiamo ancora generare la risposta definitiva
-    if "Analizzo" in st.session_state.commento_ai or "Oh, cercate" in st.session_state.commento_ai:
+    # Verifichiamo se abbiamo un trigger per generare la risposta
+    # (Ovvero: il commento attuale è quello temporaneo impostato nello Step 6)
+    trigger_generazione = any(frase in st.session_state.commento_ai for frase in ["Analizzo", "Oh, cercate"])
+    
+    if trigger_generazione:
         try:
             genai.configure(api_key=api_key) 
             model = genai.GenerativeModel('gemini-1.5-flash')
             
-            # Calcolo raggio basato sulla stanchezza salvata
+            # Calcolo raggio dinamico
             stanchezza_max = max(d.get('lui', 5), d.get('lei', 5))
-            raggio = 500 if stanchezza_max > 7 else 800
+            raggio_base = 500 if stanchezza_max > 7 else 800
 
             prompt = f"""
-            Agisci come il 'Decision Bot Cinico'. Sei sarcastico e arrogante.
-            POSIZIONE ATTUALE: {d.get('pos')}
-            DATI COPPIA: Stanchezza Lui {d.get('lui')}/10, Lei {d.get('lei')}/10. 
-            Budget: {d.get('budget')}. Meteo: {d.get('meteo')}. Mezzo: {d.get('mezzo')}.
-            ATTIVITÀ RICHIESTE: {d.get('cat')}
+            Agisci come il 'Decision Bot Cinico'. Sei sarcastico, arrogante e spietato.
+            Il tuo compito è distruggere le speranze della coppia fornendo però opzioni reali.
             
-            LOGICA GEOGRAFICA:
-            1. Suggerisci posti reali entro un raggio di {raggio} metri dalla posizione fornita.
-            2. Se la zona è collinare, aumenta il raggio del 20% ma insultali per la fatica che faranno.
+            DATI CONTESTUALI:
+            - POSIZIONE: {d.get('pos')}
+            - STANCHEZZA: Lui {d.get('lui')}/10, Lei {d.get('lei')}/10. 
+            - BUDGET: {d.get('budget')}
+            - METEO: {d.get('meteo')}
+            - MEZZO: {d.get('mezzo')}
+            - COSA VOGLIONO: {d.get('cat')}
             
-            FORMATO OUTPUT:
-            - Esordio acido sulla loro condizione.
-            - 3 opzioni REALI (Nome, Distanza approssimativa, Il Verdetto cattivo).
-            - Link Google Maps per ognuna.
+            LOGICA:
+            1. Suggerisci 3 posti REALI che si trovano vicino a {d.get('pos')}.
+            2. Usa un raggio di circa {raggio_base} metri.
+            3. Se la zona è collinare o difficile, rinfaccia loro quanto sono pigri.
+            
+            FORMATO RICHIESTO:
+            - Un insulto iniziale epico basato sulla loro combinazione di stanchezza e budget.
+            - 3 Opzioni: **[Nome Posto]** - [Distanza]. Un commento acido sul perché dovrebbero andarci (o perché non li vorranno).
+            - Link Google Maps per ogni posto (formato: https://www.google.com/maps/search/?api=1&query=NOME+POSTO+CITTA).
             """
 
-            with st.spinner("Sto decidendo il vostro destino... spero sia tragico."):
+            with st.spinner("Sto consultando gli astri (e le recensioni negative)..."):
                 response = model.generate_content(prompt)
-                # Sostituiamo il commento temporaneo con la sentenza finale di Gemini
+                # Sostituiamo il trigger con il testo finale per bloccare il loop
                 st.session_state.commento_ai = response.text
                 st.rerun()
                 
         except Exception as e:
-            st.error(f"Errore: Il Genio ha avuto un travaso di bile. Dettaglio: {e}")
+            st.error(f"Il sistema è collassato sotto il peso della vostra indecisione: {e}")
+            if st.button("Riprova a pregare il bot"):
+                st.rerun()
 
-    # Visualizzazione della sentenza finale (Markdown per link e grassetti)
+    # Visualizzazione finale del verdetto
     st.markdown(st.session_state.commento_ai)
 
     st.divider()
     
-    # Bottone per resettare tutto e ricominciare
-    if st.button("Ricomincia il calvario"):
+    # Bottone di reset totale
+    if st.button("Ricomincia il calvario", type="secondary"):
+        # Reset di tutte le variabili di stato
         st.session_state.step = 1
         st.session_state.dati = {}
         st.session_state.commento_ai = "Bentornati. Pronti per un altro giro di umiliazioni?"
+        # Pulizia delle key dei widget
+        for key in list(st.session_state.keys()):
+            if key.startswith("sel_") or key.startswith("modo_"):
+                del st.session_state[key]
         st.rerun()
     
 
